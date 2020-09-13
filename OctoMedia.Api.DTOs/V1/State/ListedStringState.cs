@@ -2,6 +2,6 @@
 {
     public class ListedStringState : State
     {
-        public string[] Values { get; set; }
+        public string[] Values { get; set; } = null!;
     }
 }

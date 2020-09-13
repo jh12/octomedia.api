@@ -5,7 +5,7 @@ namespace OctoMedia.Api.DTOs.V1.Responses
     public class CreatedResponse : IKeyed<int>
     {
         public int Key { get; set; }
-        public string Response { get; set; }
+        public string Response { get; set; } = null!;
 
         public CreatedResponse()
         {
