@@ -23,7 +23,7 @@ namespace OctoMedia.Api.Controllers
         #region Keyed datetime
 
         [HttpGet("keyed/datetime/{keyPattern}")]
-        public async IAsyncEnumerable<KeyedDateTimeState> GetDateTimeStates(string keyPattern, CancellationToken cancellationToken)
+        public async IAsyncEnumerable<KeyedDateTimeState> GetDateTimeStates(string keyPattern, [EnumeratorCancellation] CancellationToken cancellationToken)
         {
             await foreach (KeyedDateTimeState state in _stateRepository.GetStatesAsync<KeyedDateTimeState>(keyPattern, cancellationToken))
             {

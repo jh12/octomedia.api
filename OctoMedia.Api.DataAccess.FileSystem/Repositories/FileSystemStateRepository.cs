@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -32,7 +33,7 @@ namespace OctoMedia.Api.DataAccess.FileSystem.Repositories
             };
         }
 
-        public async IAsyncEnumerable<T> GetStatesAsync<T>(string keyPattern, CancellationToken cancellationToken) where T : State
+        public async IAsyncEnumerable<T> GetStatesAsync<T>(string keyPattern, [EnumeratorCancellation] CancellationToken cancellationToken) where T : State
         {
             string directory = GetDirectory<T>();
 
@@ -52,10 +53,9 @@ namespace OctoMedia.Api.DataAccess.FileSystem.Repositories
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                using (FileStream fileStream = fileInfo.OpenRead())
-                {
-                    yield return await JsonSerializer.DeserializeAsync<T>(fileStream, _jsonSerializerOptions, cancellationToken);
-                }
+                using FileStream fileStream = fileInfo.OpenRead();
+
+                yield return await JsonSerializer.DeserializeAsync<T>(fileStream, _jsonSerializerOptions, cancellationToken);
             }
         }
 
@@ -67,14 +67,13 @@ namespace OctoMedia.Api.DataAccess.FileSystem.Repositories
             if (!Directory.Exists(directory))
                 Directory.CreateDirectory(directory);
 
-            using (FileStream fileStream = File.Open(path, FileMode.Create, FileAccess.Write))
-            using (Utf8JsonWriter writer = new Utf8JsonWriter(fileStream, _jsonWriterOptions))
-            {
-                JsonSerializer.Serialize(writer, value, _jsonSerializerOptions);
-            }
+            using FileStream fileStream = File.Open(path, FileMode.Create, FileAccess.Write);
+            await using Utf8JsonWriter writer = new Utf8JsonWriter(fileStream, _jsonWriterOptions);
+
+            JsonSerializer.Serialize(writer, value, _jsonSerializerOptions);
         }
 
-        public async Task DeleteStateAsync<T>(string key, CancellationToken cancellationToken) where T : State
+        public Task DeleteStateAsync<T>(string key, CancellationToken cancellationToken) where T : State
         {
             string path = GetPath<T>(key);
 
@@ -82,6 +81,8 @@ namespace OctoMedia.Api.DataAccess.FileSystem.Repositories
                 throw new StateNotFoundException("No state found with that key");
 
             File.Delete(path);
+
+            return Task.CompletedTask;
         }
 
         private string GetDirectory<T>()

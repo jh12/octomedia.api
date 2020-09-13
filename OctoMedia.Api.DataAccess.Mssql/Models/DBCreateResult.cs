@@ -2,7 +2,7 @@
 {
     public class DBCreateResult
     {
-        public string Action { get; set; }
+        public string Action { get; set; } = null!;
         public int? Id { get; set; }
     }
 }

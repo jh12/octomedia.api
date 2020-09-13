@@ -6,7 +6,7 @@ namespace OctoMedia.Api.Common.Exceptions
     public class HttpResponseException : Exception
     {
         public readonly HttpStatusCode Status;
-        public readonly string Value;
+        public readonly string? Value;
 
         public HttpResponseException(HttpStatusCode status)
         {
