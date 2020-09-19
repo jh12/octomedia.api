@@ -27,7 +27,7 @@ jobs:
           SEMVER=${{ steps.previoustag.outputs.tag }}
           RELEASE_VERSION="${SEMVER:1}"
           docker login docker.pkg.github.com -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN}}
-          docker build --build-arg RELEASE_VERSION=$RELEASE_VERSION -f OctoMedia.Api/Dockerfile -t jh12/octomedia.api/octomedia.api:latest-alpha -t jh12/octomedia.api/octomedia.api:$RELEASE_VERSION .
+          docker build --build-arg RELEASE_VERSION=$RELEASE_VERSION -f OctoMedia.Api/Dockerfile -t docker.pkg.github.com/jh12/octomedia.api/octomedia.api:latest-alpha -t docker.pkg.github.com/jh12/octomedia.api/octomedia.api:$RELEASE_VERSION .
           docker push docker.pkg.github.com/jh12/octomedia.api/octomedia.api
           docker logout docker.pkg.github.com
       # Master branch
@@ -37,6 +37,6 @@ jobs:
           SEMVER=${{ steps.previoustag.outputs.tag }}
           RELEASE_VERSION="${SEMVER:1}"
           docker login docker.pkg.github.com -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN}}
-          docker build --build-arg RELEASE_VERSION=$RELEASE_VERSION -f OctoMedia.Api/Dockerfile -t jh12/octomedia.api/octomedia.api:latest -t jh12/octomedia.api/octomedia.api:$RELEASE_VERSION .
+          docker build --build-arg RELEASE_VERSION=$RELEASE_VERSION -f OctoMedia.Api/Dockerfile -t docker.pkg.github.com/jh12/octomedia.api/octomedia.api:latest -t docker.pkg.github.com/jh12/octomedia.api/octomedia.api:$RELEASE_VERSION .
           docker push docker.pkg.github.com/jh12/octomedia.api/octomedia.api
           docker logout docker.pkg.github.com
