@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -61,6 +62,9 @@ namespace OctoMedia.Api.DataAccess.FileSystem.Repositories
 
         public async Task SaveStateAsync<T>(string key, T value, CancellationToken cancellationToken) where T : State
         {
+            if (!string.Equals(value.Key, key, StringComparison.CurrentCultureIgnoreCase))
+                value.Key = key;
+
             string directory = GetDirectory<T>();
             string path = GetPath<T>(key);
 
