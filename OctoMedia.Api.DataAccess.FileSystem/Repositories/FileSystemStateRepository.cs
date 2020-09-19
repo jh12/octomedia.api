@@ -34,12 +34,12 @@ namespace OctoMedia.Api.DataAccess.FileSystem.Repositories
             };
         }
 
-        public async IAsyncEnumerable<T> GetStatesAsync<T>(string keyPattern, [EnumeratorCancellation] CancellationToken cancellationToken) where T : State
+        public async Task<IEnumerable<T>> GetStatesAsync<T>(string keyPattern, CancellationToken cancellationToken) where T : State
         {
             string directory = GetDirectory<T>();
 
-            if (!Directory.Exists(directory)) 
-                yield break;
+            if (!Directory.Exists(directory))
+                return Enumerable.Empty<T>();
 
             keyPattern += ".json";
 
@@ -50,14 +50,19 @@ namespace OctoMedia.Api.DataAccess.FileSystem.Repositories
             if(!files.Any())
                 throw new StateNotFoundException();
 
+            List<T> results = new List<T>();
+
             foreach (FileInfo fileInfo in files)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 using FileStream fileStream = fileInfo.OpenRead();
 
-                yield return await JsonSerializer.DeserializeAsync<T>(fileStream, _jsonSerializerOptions, cancellationToken);
+                T result = await JsonSerializer.DeserializeAsync<T>(fileStream, _jsonSerializerOptions, cancellationToken);
+                results.Add(result);
             }
+
+            return results;
         }
 
         public async Task SaveStateAsync<T>(string key, T value, CancellationToken cancellationToken) where T : State

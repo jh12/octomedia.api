@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OctoMedia.Api.Common.Repositories;
+using OctoMedia.Api.DTOs.V1.Responses;
 using OctoMedia.Api.DTOs.V1.State;
 
 namespace OctoMedia.Api.Controllers
@@ -23,15 +24,17 @@ namespace OctoMedia.Api.Controllers
         #region Keyed datetime
 
         [HttpGet("keyed/datetime/{keyPattern}")]
-        public async IAsyncEnumerable<KeyedDateTimeState> GetDateTimeStates(string keyPattern, [EnumeratorCancellation] CancellationToken cancellationToken)
+        [ProducesResponseType(typeof(ListedStringState[]), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetDateTimeStates(string keyPattern, CancellationToken cancellationToken)
         {
-            await foreach (KeyedDateTimeState state in _stateRepository.GetStatesAsync<KeyedDateTimeState>(keyPattern, cancellationToken))
-            {
-                yield return state;
-            }
+            IEnumerable<KeyedDateTimeState> states = await _stateRepository.GetStatesAsync<KeyedDateTimeState>(keyPattern, cancellationToken);
+
+            return Ok(states);
         }
 
         [HttpPut("keyed/datetime/{key}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> SaveDateTimeState(string key, [FromBody] KeyedDateTimeState value, CancellationToken cancellationToken)
         {
             await _stateRepository.SaveStateAsync(key, value, cancellationToken);
@@ -40,6 +43,8 @@ namespace OctoMedia.Api.Controllers
         }
 
         [HttpDelete("keyed/datetime/{key}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteDateTimeState(string key, CancellationToken cancellationToken)
         {
             await _stateRepository.DeleteStateAsync<KeyedDateTimeState>(key, cancellationToken);
@@ -52,15 +57,17 @@ namespace OctoMedia.Api.Controllers
         #region Keyed string
 
         [HttpGet("listed/string/{keyPattern}")]
-        public async IAsyncEnumerable<ListedStringState> GetStringStates(string keyPattern, [EnumeratorCancellation] CancellationToken cancellationToken)
+        [ProducesResponseType(typeof(ListedStringState[]), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetStringStates(string keyPattern, CancellationToken cancellationToken)
         {
-            await foreach (ListedStringState state in _stateRepository.GetStatesAsync<ListedStringState>(keyPattern, cancellationToken))
-            {
-                yield return state;
-            }
+            IEnumerable<ListedStringState> states = await _stateRepository.GetStatesAsync<ListedStringState>(keyPattern, cancellationToken);
+
+            return Ok(states);
         }
 
         [HttpPut("listed/string/{key}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> SaveStringState(string key, [FromBody] ListedStringState value, CancellationToken cancellationToken)
         {
             await _stateRepository.SaveStateAsync(key, value, cancellationToken);
@@ -69,6 +76,8 @@ namespace OctoMedia.Api.Controllers
         }
 
         [HttpDelete("listed/string/{key}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> DeleteStringState(string key, CancellationToken cancellationToken)
         {
             await _stateRepository.DeleteStateAsync<ListedStringState>(key, cancellationToken);
