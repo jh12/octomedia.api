@@ -30,6 +30,8 @@ jobs:
           docker build --build-arg RELEASE_VERSION=$RELEASE_VERSION -f OctoMedia.Api/Dockerfile -t docker.pkg.github.com/jh12/octomedia.api/octomedia.api:latest-alpha -t docker.pkg.github.com/jh12/octomedia.api/octomedia.api:$RELEASE_VERSION .
           docker push docker.pkg.github.com/jh12/octomedia.api/octomedia.api
           docker logout docker.pkg.github.com
+          dotnet pack ./OctoMedia.Api.DTOs/OctoMedia.Api.DTOs.csproj --configuration Release --include-symbols -p:SymbolPackageFormat=snupkg -p:PackageVersion=$RELEASE_VERSION
+          dotnet nuget push **/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source ${{ secrets.NUGET_SOURCE }}
       # Master branch
       - name: Docker master publish
         if: github.event.base_ref == 'refs/heads/master'
@@ -40,3 +42,5 @@ jobs:
           docker build --build-arg RELEASE_VERSION=$RELEASE_VERSION -f OctoMedia.Api/Dockerfile -t docker.pkg.github.com/jh12/octomedia.api/octomedia.api:latest -t docker.pkg.github.com/jh12/octomedia.api/octomedia.api:$RELEASE_VERSION .
           docker push docker.pkg.github.com/jh12/octomedia.api/octomedia.api
           docker logout docker.pkg.github.com
+          dotnet pack ./OctoMedia.Api.DTOs/OctoMedia.Api.DTOs.csproj --configuration Release --include-symbols -p:SymbolPackageFormat=snupkg -p:PackageVersion=$RELEASE_VERSION
+          dotnet nuget push **/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source ${{ secrets.NUGET_SOURCE }}
