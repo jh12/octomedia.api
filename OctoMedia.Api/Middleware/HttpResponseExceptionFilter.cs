@@ -3,9 +3,9 @@ using System.Data.SqlClient;
 using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.Extensions.Logging;
 using OctoMedia.Api.Common.Exceptions;
 using OctoMedia.Api.DTOs.V1.Responses;
+using Serilog;
 
 namespace OctoMedia.Api.Middleware
 {
@@ -27,7 +27,7 @@ namespace OctoMedia.Api.Middleware
         public void OnActionExecuted(ActionExecutedContext context)
         {
             if(context.Exception != null)
-                _logger.LogError(context.Exception, "An unhandled exception was thrown");
+                _logger.Error(context.Exception, "An unhandled exception was thrown");
 
             if (context.Exception is NotImplementedException notImplemented)
             {
