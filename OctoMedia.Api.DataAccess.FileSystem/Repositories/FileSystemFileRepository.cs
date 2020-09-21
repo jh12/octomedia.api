@@ -55,7 +55,7 @@ namespace OctoMedia.Api.DataAccess.FileSystem.Repositories
 
             string directory = Path.GetDirectoryName(fileWithoutExtension);
 
-            if(Directory.Exists(directory))
+            if(!Directory.Exists(directory))
                 throw new EntryNotFoundException(id);
 
             string filename = Path.GetFileNameWithoutExtension(fileWithoutExtension);
