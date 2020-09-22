@@ -56,7 +56,10 @@ namespace OctoMedia.Api.Utilities
                 return false;
 
             if (buffer[3] < 0xE0 || buffer[3] > 0xE8)
-                return false;
+            {
+                if(buffer[3] != 0xDB)
+                    return false;
+            }
 
             return true;
         }
