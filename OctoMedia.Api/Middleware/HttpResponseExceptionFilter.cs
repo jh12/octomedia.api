@@ -26,11 +26,10 @@ namespace OctoMedia.Api.Middleware
 
         public void OnActionExecuted(ActionExecutedContext context)
         {
-            if(context.Exception != null)
-                _logger.Error(context.Exception, "An unhandled exception was thrown");
-
             if (context.Exception is NotImplementedException notImplemented)
             {
+                _logger.Error(context.Exception, "Not implemented exception was thrown");
+
                 ErrorResponse response = new ErrorResponse(HttpStatusCode.NotImplemented, notImplemented.Message);
 
                 context.Result = new ObjectResult(response)
@@ -51,6 +50,8 @@ namespace OctoMedia.Api.Middleware
             }
             else if (context.Exception is HttpResponseException httpResponse)
             {
+                _logger.Error(context.Exception, "An unhandled exception was thrown");
+
                 ErrorResponse response = new ErrorResponse(httpResponse.Status, httpResponse.Value);
 
                 context.Result = new ObjectResult(response)
@@ -59,6 +60,8 @@ namespace OctoMedia.Api.Middleware
                 };
                 context.ExceptionHandled = true;
             }
+            else if(context.Exception != null)
+                _logger.Error(context.Exception, "An unhandled exception was thrown");
         }
     }
 }
