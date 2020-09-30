@@ -1,13 +1,12 @@
 ﻿using System;
-using System.Reflection.Metadata.Ecma335;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OctoMedia.Api.Common.Repositories;
-using OctoMedia.Api.DTOs.V1.Media.Meta;
 using OctoMedia.Api.DTOs.V1.Media.Meta.Source;
 using OctoMedia.Api.DTOs.V1.Responses;
+using Serilog.Context;
 
 namespace OctoMedia.Api.Controllers
 {
@@ -25,9 +24,12 @@ namespace OctoMedia.Api.Controllers
         [HttpGet("{id}")]
         public async Task<KeyedSource> GetSource(int id, CancellationToken cancellationToken)
         {
-            KeyedSource source = await _mediaRepository.GetSourceAsync(id, cancellationToken);
+            using (LogContext.PushProperty("SourceId", id))
+            {
+                KeyedSource source = await _mediaRepository.GetSourceAsync(id, cancellationToken);
 
-            return source;
+                return source;
+            }
         }
 
         [HttpPost]
@@ -42,7 +44,10 @@ namespace OctoMedia.Api.Controllers
         [HttpGet("{id}/attachments")]
         public Task<SourceAttachments> GetAttachments(int id, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            using (LogContext.PushProperty("SourceId", id))
+            {
+                throw new NotImplementedException();
+            }
         }
 
         #region Reddit Attachment
@@ -51,12 +56,15 @@ namespace OctoMedia.Api.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         public async Task<IActionResult> AttachRedditToSource(int id, [FromBody] RedditSource redditSource, CancellationToken cancellationToken)
         {
-            if (redditSource.PostedAt.Kind != DateTimeKind.Utc)
-                return BadRequest(new TextResponse("PostedAt must be in UTC"));
+            using (LogContext.PushProperty("SourceId", id))
+            {
+                if (redditSource.PostedAt.Kind != DateTimeKind.Utc)
+                    return BadRequest(new TextResponse("PostedAt must be in UTC"));
 
-            await _mediaRepository.AttachRedditToSource(id, redditSource, cancellationToken);
+                await _mediaRepository.AttachRedditToSource(id, redditSource, cancellationToken);
 
-            return CreatedAtAction(nameof(GetAttachments), new { id }, new TextResponse($"Attached to source with id {id}"));
+                return CreatedAtAction(nameof(GetAttachments), new { id }, new TextResponse($"Attached to source with id {id}"));
+            }
         }
 
         #endregion

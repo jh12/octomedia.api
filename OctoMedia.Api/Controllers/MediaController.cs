@@ -10,6 +10,7 @@ using OctoMedia.Api.Common.Repositories;
 using OctoMedia.Api.DTOs.V1.Media;
 using OctoMedia.Api.DTOs.V1.Responses;
 using OctoMedia.Api.Utilities;
+using Serilog.Context;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
 
@@ -34,9 +35,12 @@ namespace OctoMedia.Api.Controllers
         [HttpGet("{id}")]
         public async Task<KeyedMedia> GetMedia(int id, CancellationToken cancellationToken)
         {
-            KeyedMedia media = await _mediaRepository.GetMediaAsync(id, cancellationToken);
+            using (LogContext.PushProperty("MediaId", id))
+            {
+                KeyedMedia media = await _mediaRepository.GetMediaAsync(id, cancellationToken);
 
-            return media;
+                return media;
+            }
         }
 
         [HttpPost]
@@ -53,50 +57,59 @@ namespace OctoMedia.Api.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public Task<IActionResult> UpdateMedia([FromBody] KeyedMedia media, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            using(LogContext.PushProperty("MediaId", media.Key))
+            {
+                throw new NotImplementedException();
+            }
         }
 
         [HttpGet("{id}/file")]
         public async Task<IActionResult> GetMediaFile(int id, CancellationToken cancellationToken)
         {
-            if (!await _mediaRepository.MediaExistsAsync(id, cancellationToken))
-                return NotFound(new TextResponse("No file found with the requested id"));
+            using(LogContext.PushProperty("MediaId", id))
+            {
+                if (!await _mediaRepository.MediaExistsAsync(id, cancellationToken))
+                    return NotFound(new TextResponse("No file found with the requested id"));
 
-            MediaStreamMetadata mediaStreamMetadata = await _fileRepository.GetMediaAsync(id, cancellationToken);
-            string mimeType = MimeTypeMap.GetMimeType(mediaStreamMetadata.Extension);
+                MediaStreamMetadata mediaStreamMetadata = await _fileRepository.GetMediaAsync(id, cancellationToken);
+                string mimeType = MimeTypeMap.GetMimeType(mediaStreamMetadata.Extension);
 
-            return File(mediaStreamMetadata.Content, mimeType, true);
+                return File(mediaStreamMetadata.Content, mimeType, true);
+            }
         }
 
         [HttpGet("{id}/file/small")]
         public async Task<IActionResult> GetMediaSmallFile(int id, CancellationToken cancellationToken)
         {
-            if (!await _mediaRepository.MediaExistsAsync(id, cancellationToken))
-                return NotFound(new TextResponse("No file found with the requested id"));
-
-            MediaStreamMetadata? mediaStreamMetadata = await _fileRepository.GetMediaAsync(id, cancellationToken);
-            await using (mediaStreamMetadata.Content)
+            using(LogContext.PushProperty("MediaId", id))
             {
-                string mimeType = MimeTypeMap.GetMimeType(mediaStreamMetadata.Extension);
+                if (!await _mediaRepository.MediaExistsAsync(id, cancellationToken))
+                    return NotFound(new TextResponse("No file found with the requested id"));
 
-                if (!mimeType.StartsWith("image", StringComparison.CurrentCultureIgnoreCase))
-                    return BadRequest(new TextResponse("File does not support generation of small version"));
+                MediaStreamMetadata? mediaStreamMetadata = await _fileRepository.GetMediaAsync(id, cancellationToken);
+                await using (mediaStreamMetadata.Content)
+                {
+                    string mimeType = MimeTypeMap.GetMimeType(mediaStreamMetadata.Extension);
 
-                using Image image = await Image.LoadAsync(mediaStreamMetadata.Content);
-                image.Mutate(x => x.Resize(
-                    new ResizeOptions
-                    {
-                        Mode = ResizeMode.Max,
-                        Size = new Size(250),
-                        Sampler = KnownResamplers.Lanczos2
-                    }));
+                    if (!mimeType.StartsWith("image", StringComparison.CurrentCultureIgnoreCase))
+                        return BadRequest(new TextResponse("File does not support generation of small version"));
 
-                MemoryStream smallStream = new MemoryStream();
-                image.SaveAsJpeg(smallStream);
+                    using Image image = await Image.LoadAsync(mediaStreamMetadata.Content);
+                    image.Mutate(x => x.Resize(
+                        new ResizeOptions
+                        {
+                            Mode = ResizeMode.Max,
+                            Size = new Size(250),
+                            Sampler = KnownResamplers.Lanczos2
+                        }));
 
-                smallStream.Position = 0;
+                    MemoryStream smallStream = new MemoryStream();
+                    image.SaveAsJpeg(smallStream);
 
-                return File(smallStream, mimeType, true);
+                    smallStream.Position = 0;
+
+                    return File(smallStream, mimeType, true);
+                }
             }
         }
 
@@ -104,25 +117,28 @@ namespace OctoMedia.Api.Controllers
         [RequestSizeLimit(UploadLimit)]
         public async Task<IActionResult> UploadMediaFile(int id, CancellationToken cancellationToken)
         {
-            string contentType = Request.ContentType;
-            if (Request.ContentLength > UploadLimit)
-                return new UnprocessableEntityResult();
+            using(LogContext.PushProperty("MediaId", id))
+            {
+                string contentType = Request.ContentType;
+                if (Request.ContentLength > UploadLimit)
+                    return new UnprocessableEntityResult();
 
-            Request.EnableBuffering();
-            string streamMimeType = await FileUtility.GetMimeType(Request.Body);
+                Request.EnableBuffering();
+                string streamMimeType = await FileUtility.GetMimeType(Request.Body);
 
-            if (!string.Equals(streamMimeType, contentType, StringComparison.CurrentCultureIgnoreCase))
-                return BadRequest(new TextResponse("Content-Type did not match the request body"));
+                if (!string.Equals(streamMimeType, contentType, StringComparison.CurrentCultureIgnoreCase))
+                    return BadRequest(new TextResponse("Content-Type did not match the request body"));
 
-            string extension = MimeTypeMap.GetExtension(contentType).Substring(1);
-            string metaExtension = await _mediaRepository.GetMediaExtensionAsync(id, cancellationToken);
+                string extension = MimeTypeMap.GetExtension(contentType).Substring(1);
+                string metaExtension = await _mediaRepository.GetMediaExtensionAsync(id, cancellationToken);
 
-            if (!string.Equals(extension, metaExtension, StringComparison.CurrentCultureIgnoreCase))
-                return BadRequest(new TextResponse("Content-Type did not match the registered metadata"));
+                if (!string.Equals(extension, metaExtension, StringComparison.CurrentCultureIgnoreCase))
+                    return BadRequest(new TextResponse("Content-Type did not match the registered metadata"));
 
-            await _fileRepository.SaveMediaAsync(id, extension, Request.Body, cancellationToken);
+                await _fileRepository.SaveMediaAsync(id, extension, Request.Body, cancellationToken);
 
-            return Ok();
+                return Ok();
+            }
         }
     }
 }
