@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using OctoMedia.Api.Common.Exceptions;
 
 namespace OctoMedia.Api.Utilities
 {
@@ -27,8 +28,7 @@ namespace OctoMedia.Api.Utilities
             if (IsMp4(buffer))
                 return "video/mp4";
 
-            Debugger.Break();
-            throw new NotImplementedException();
+            throw new MimeTypeNotSupportedException(buffer);
         }
 
         private static bool ContainsArray(byte[] toSearch, byte[] signature, int offset = 1)

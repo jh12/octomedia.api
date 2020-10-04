@@ -5,11 +5,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using OctoMedia.Api.Common.Exceptions;
 using OctoMedia.Api.Common.Models;
 using OctoMedia.Api.Common.Repositories;
 using OctoMedia.Api.DTOs.V1.Media;
 using OctoMedia.Api.DTOs.V1.Responses;
 using OctoMedia.Api.Utilities;
+using Serilog;
 using Serilog.Context;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
@@ -25,11 +27,13 @@ namespace OctoMedia.Api.Controllers
 
         private readonly IMediaRepository _mediaRepository;
         private readonly IFileRepository _fileRepository;
+        private readonly ILogger _logger;
 
-        public MediaController(IMediaRepository mediaRepository, IFileRepository fileRepository)
+        public MediaController(IMediaRepository mediaRepository, IFileRepository fileRepository, ILogger logger)
         {
             _mediaRepository = mediaRepository;
             _fileRepository = fileRepository;
+            _logger = logger;
         }
 
         [HttpGet("{id}")]
@@ -124,7 +128,19 @@ namespace OctoMedia.Api.Controllers
                     return new UnprocessableEntityResult();
 
                 Request.EnableBuffering();
-                string streamMimeType = await FileUtility.GetMimeType(Request.Body);
+                string streamMimeType;
+                try
+                {
+                    streamMimeType = await FileUtility.GetMimeType(Request.Body);
+                }
+                catch (MimeTypeNotSupportedException e)
+                {
+                    using(LogContext.PushProperty("MagicBytes", "0x" + BitConverter.ToString(e.InputBytes).Replace("-", string.Empty)))
+                    {
+                        _logger.Error(e, "Could not recognize mimetype for media file");
+                    }
+                    throw;
+                }
 
                 if (!string.Equals(streamMimeType, contentType, StringComparison.CurrentCultureIgnoreCase))
                     return BadRequest(new TextResponse("Content-Type did not match the request body"));
