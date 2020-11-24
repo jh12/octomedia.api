@@ -14,6 +14,8 @@ namespace OctoMedia.Api.Common.Repositories
         Task<int> CreateSourceAsync(Source source, CancellationToken cancellationToken);
         Task UpdateSourceAsync(KeyedSource source, CancellationToken cancellationToken);
 
+        Task<int[]> GetSourceMediaIdsAsync(int id, CancellationToken cancellationToken);
+
 
         #region Reddit Attachment
 

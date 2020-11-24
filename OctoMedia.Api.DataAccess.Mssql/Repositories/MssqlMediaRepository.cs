@@ -107,6 +107,26 @@ OUTPUT
             throw new NotImplementedException();
         }
 
+        public async Task<int[]> GetSourceMediaIdsAsync(int id, CancellationToken cancellationToken)
+        {
+            const string sql = @"
+SELECT
+    Id    = media.Id
+FROM
+    OctoMedia.Media AS media
+WHERE
+    media.SourceId = @id";
+
+            using IDbConnection connection = await _connectionFactory.OpenConnectionAsync(cancellationToken);
+
+            IEnumerable<int> sourceIds = await connection.QueryAsync<int>(new CommandDefinition(sql, new { id }, cancellationToken: cancellationToken));
+
+            if (!sourceIds.Any())
+                throw new EntryNotFoundException(id);
+
+            return sourceIds.ToArray();
+        }
+
         #region Reddit Attachment
 
         public async Task AttachRedditToSource(int id, RedditSource redditSource, CancellationToken cancellationToken)

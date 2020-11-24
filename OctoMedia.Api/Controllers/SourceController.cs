@@ -50,6 +50,17 @@ namespace OctoMedia.Api.Controllers
             }
         }
 
+        [HttpGet("{id}/medias")]
+        public async Task<int[]> GetSourceMediaIds(int id, CancellationToken cancellationToken)
+        {
+            using (LogContext.PushProperty("SourceId", id))
+            {
+                int[] mediaIds = await _mediaRepository.GetSourceMediaIdsAsync(id, cancellationToken);
+
+                return mediaIds;
+            }
+        }
+
         #region Reddit Attachment
 
         [HttpPost("{id}/attach/reddit")]
