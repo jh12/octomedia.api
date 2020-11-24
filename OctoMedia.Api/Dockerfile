@@ -1,7 +1,7 @@
-FROM mcr.microsoft.com/dotnet/core/aspnet:3.1-buster-slim AS base
+FROM mcr.microsoft.com/dotnet/aspnet:5.0-buster-slim AS base
 WORKDIR /app
 
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1-buster AS publish
+FROM mcr.microsoft.com/dotnet/sdk:5.0-buster-slim AS publish
 ARG RELEASE_VERSION
 WORKDIR /src
 COPY ["OctoMedia.Api/OctoMedia.Api.csproj", "OctoMedia.Api/"]

@@ -16,7 +16,7 @@ jobs:
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 3.1.301
+          dotnet-version: 5.0.100
       - name: Get version tag
         id: previoustag
         uses: WyriHaximus/github-action-get-previous-tag@master
@@ -26,10 +26,10 @@ jobs:
         run: |
           SEMVER=${{ steps.previoustag.outputs.tag }}
           RELEASE_VERSION="${SEMVER:1}"
-          docker login docker.pkg.github.com -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN}}
-          docker build --build-arg RELEASE_VERSION=$RELEASE_VERSION -f OctoMedia.Api/Dockerfile -t docker.pkg.github.com/jh12/octomedia.api/octomedia.api:latest-alpha -t docker.pkg.github.com/jh12/octomedia.api/octomedia.api:$RELEASE_VERSION .
-          docker push docker.pkg.github.com/jh12/octomedia.api/octomedia.api
-          docker logout docker.pkg.github.com
+          docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.CONTAINER_REGISTRY_PAT }}
+          docker build --build-arg RELEASE_VERSION=$RELEASE_VERSION -f OctoMedia.Api/Dockerfile -t ghcr.io/jh12/octomedia.api/octomedia.api:latest-alpha -t ghcr.io/jh12/octomedia.api/octomedia.api:$RELEASE_VERSION .
+          docker push ghcr.io/jh12/octomedia.api/octomedia.api
+          docker logout ghcr.io
           dotnet pack ./OctoMedia.Api.DTOs/OctoMedia.Api.DTOs.csproj --configuration Release --include-symbols -p:SymbolPackageFormat=snupkg -p:PackageVersion=$RELEASE_VERSION
           dotnet nuget push **/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source ${{ secrets.NUGET_SOURCE }}
       # Master branch
@@ -38,9 +38,9 @@ jobs:
         run: |
           SEMVER=${{ steps.previoustag.outputs.tag }}
           RELEASE_VERSION="${SEMVER:1}"
-          docker login docker.pkg.github.com -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN}}
-          docker build --build-arg RELEASE_VERSION=$RELEASE_VERSION -f OctoMedia.Api/Dockerfile -t docker.pkg.github.com/jh12/octomedia.api/octomedia.api:latest -t docker.pkg.github.com/jh12/octomedia.api/octomedia.api:$RELEASE_VERSION .
-          docker push docker.pkg.github.com/jh12/octomedia.api/octomedia.api
-          docker logout docker.pkg.github.com
+          docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.CONTAINER_REGISTRY_PAT }}
+          docker build --build-arg RELEASE_VERSION=$RELEASE_VERSION -f OctoMedia.Api/Dockerfile -t ghcr.io/jh12/octomedia.api/octomedia.api:latest -t ghcr.io/jh12/octomedia.api/octomedia.api:$RELEASE_VERSION .
+          docker push ghcr.io/jh12/octomedia.api/octomedia.api
+          docker logout ghcr.io
           dotnet pack ./OctoMedia.Api.DTOs/OctoMedia.Api.DTOs.csproj --configuration Release --include-symbols -p:SymbolPackageFormat=snupkg -p:PackageVersion=$RELEASE_VERSION
           dotnet nuget push **/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source ${{ secrets.NUGET_SOURCE }}
