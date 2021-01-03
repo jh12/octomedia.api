@@ -4,11 +4,12 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using OctoMedia.Api.DataAccess.FileSystem;
+using OctoMedia.Api.Common.Options;
 using OctoMedia.Api.DataAccess.FileSystem.Configuration;
 using OctoMedia.Api.DataAccess.Mssql;
 using OctoMedia.Api.DataAccess.Mssql.Configuration;
 using OctoMedia.Api.Middleware;
+using OctoMedia.Api.Modules;
 using Serilog;
 using Swashbuckle.AspNetCore.SwaggerUI;
 
@@ -38,6 +39,10 @@ namespace OctoMedia.Api
                 });
 
             services.AddSwaggerGen();
+
+            services.AddHttpClient();
+            
+            services.Configure<ProxyOptions>(Configuration.GetSection(ProxyOptions.Key));
         }
 
         public void ConfigureContainer(ContainerBuilder builder)
@@ -46,7 +51,12 @@ namespace OctoMedia.Api
 
             builder.RegisterModule(new MainModule(_hostEnvironment, Configuration));
             builder.RegisterModule<MssqlModule>();
-            builder.RegisterModule<FileSystemModule>();
+
+#if DEBUG
+            builder.RegisterModule(new FileModule(true));
+#else
+            builder.RegisterModule(new FileModule(false));
+#endif
         }
 
         private void RegisterConfigurationSections(ContainerBuilder builder)
