@@ -1,23 +1,24 @@
-﻿using OctoMedia.Api.DTOs.Interfaces;
+﻿using System;
+using OctoMedia.Api.DTOs.Interfaces;
 
 namespace OctoMedia.Api.DTOs.V1.Responses
 {
-    public class CreatedResponse : IKeyed<int>
+    public class CreatedResponse : IKeyed<Guid>
     {
-        public int Key { get; set; }
+        public Guid Key { get; set; }
         public string Response { get; set; } = null!;
 
         public CreatedResponse()
         {
         }
 
-        public CreatedResponse(int key, string response)
+        public CreatedResponse(Guid key, string response)
         {
             Key = key;
             Response = response;
         }
 
-        public CreatedResponse(int key)
+        public CreatedResponse(Guid key)
         {
             Key = key;
             Response = "Created";

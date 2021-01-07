@@ -1,7 +1,7 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using OctoMedia.Api.DTOs.V1.Media;
-using OctoMedia.Api.DTOs.V1.Media.Meta;
 using OctoMedia.Api.DTOs.V1.Media.Meta.Source;
 
 namespace OctoMedia.Api.Common.Repositories
@@ -10,16 +10,16 @@ namespace OctoMedia.Api.Common.Repositories
     {
         #region Source
 
-        Task<KeyedSource> GetSourceAsync(int id, CancellationToken cancellationToken);
-        Task<int> CreateSourceAsync(Source source, CancellationToken cancellationToken);
+        Task<KeyedSource> GetSourceAsync(Guid id, CancellationToken cancellationToken);
+        Task<Guid> CreateSourceAsync(Source source, CancellationToken cancellationToken);
         Task UpdateSourceAsync(KeyedSource source, CancellationToken cancellationToken);
 
-        Task<int[]> GetSourceMediaIdsAsync(int id, CancellationToken cancellationToken);
+        Task<Guid[]> GetSourceMediaIdsAsync(Guid id, CancellationToken cancellationToken);
 
 
         #region Reddit Attachment
 
-        Task AttachRedditToSource(int id, RedditSource redditSource, CancellationToken cancellationToken);
+        Task AttachRedditToSource(Guid id, RedditSource redditSource, CancellationToken cancellationToken);
 
         #endregion
 
@@ -27,12 +27,12 @@ namespace OctoMedia.Api.Common.Repositories
 
         #region Media
 
-        Task<KeyedMedia> GetMediaAsync(int id, CancellationToken cancellationToken);
-        Task<int> CreateMediaAsync(Media media, CancellationToken cancellationToken);
+        Task<KeyedMedia> GetMediaAsync(Guid id, CancellationToken cancellationToken);
+        Task<Guid> CreateMediaAsync(Media media, CancellationToken cancellationToken);
         Task UpdateMediaAsync(KeyedMedia media, CancellationToken cancellationToken);
 
-        Task<bool> MediaExistsAsync(int id, CancellationToken cancellationToken);
-        Task<string> GetMediaExtensionAsync(int id, CancellationToken cancellationToken);
+        Task<bool> MediaExistsAsync(Guid id, CancellationToken cancellationToken);
+        Task<string> GetMediaExtensionAsync(Guid id, CancellationToken cancellationToken);
 
         #endregion
     }

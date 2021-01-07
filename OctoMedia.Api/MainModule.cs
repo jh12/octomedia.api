@@ -1,8 +1,8 @@
 ﻿using System.Diagnostics;
 using Autofac;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using OctoMedia.Api.Common.Options;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
@@ -12,12 +12,12 @@ namespace OctoMedia.Api
     public class MainModule : Module
     {
         private readonly IWebHostEnvironment _environment;
-        private readonly IConfiguration _configuration;
+        private LoggingOptions _loggingOptions;
 
-        public MainModule(IWebHostEnvironment environment, IConfiguration configuration)
+        public MainModule(IWebHostEnvironment environment, LoggingOptions loggingOptions)
         {
             _environment = environment;
-            _configuration = configuration;
+            _loggingOptions = loggingOptions;
         }
 
         protected override void Load(ContainerBuilder builder)
@@ -43,7 +43,7 @@ namespace OctoMedia.Api
                     .WriteTo.Console();
             else
                 configuration
-                    .WriteTo.Seq(_configuration["LOGGING:SEQ:URL"], apiKey: _configuration["LOGGING:SEQ:APP_Token"]);
+                    .WriteTo.Seq(_loggingOptions.SeqUrl, apiKey: _loggingOptions.SeqAppToken);
 
             Logger logger = configuration.CreateLogger();
             Log.Logger = logger;

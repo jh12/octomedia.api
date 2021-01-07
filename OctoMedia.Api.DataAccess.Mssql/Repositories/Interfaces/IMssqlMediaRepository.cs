@@ -1,4 +1,4 @@
-﻿using System.Collections;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,6 +9,6 @@ namespace OctoMedia.Api.DataAccess.Mssql.Repositories.Interfaces
 {
     internal interface IMssqlMediaRepository : IMediaRepository
     {
-        public Task<IDictionary<int, CacheMedia>> GetIdToExtensionMappingAsync(CancellationToken cancellationToken);
+        public Task<IDictionary<Guid, CacheMedia>> GetIdToExtensionMappingAsync(CancellationToken cancellationToken);
     }
 }

@@ -1,18 +1,17 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 
 namespace OctoMedia.Api.Common.Exceptions
 {
-    public abstract class EntryBaseException : HttpResponseException
+    public abstract class EntryBaseException<T> : HttpResponseException
     {
-        public int? Key { get; set; }
+        public T? Key { get; set; }
 
-        protected EntryBaseException(int key, HttpStatusCode statusCode) : base(statusCode)
+        protected EntryBaseException(T key, HttpStatusCode statusCode) : base(statusCode)
         {
             Key = key;
         }
 
-        protected EntryBaseException(int key, string message, HttpStatusCode statusCode) : base(statusCode, message)
+        protected EntryBaseException(T key, string message, HttpStatusCode statusCode) : base(statusCode, message)
         {
             Key = key;
         }

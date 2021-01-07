@@ -37,7 +37,7 @@ namespace OctoMedia.Api.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<KeyedMedia> GetMedia(int id, CancellationToken cancellationToken)
+        public async Task<KeyedMedia> GetMedia(Guid id, CancellationToken cancellationToken)
         {
             using (LogContext.PushProperty("MediaId", id))
             {
@@ -51,7 +51,9 @@ namespace OctoMedia.Api.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         public async Task<IActionResult> CreateMedia([FromBody] Media media, CancellationToken cancellationToken)
         {
-            int newId = await _mediaRepository.CreateMediaAsync(media, cancellationToken);
+            media.Deleted = false;
+
+            Guid newId = await _mediaRepository.CreateMediaAsync(media, cancellationToken);
 
             return CreatedAtAction(nameof(GetMedia), new { id = newId }, new CreatedResponse(newId));
         }
@@ -61,6 +63,8 @@ namespace OctoMedia.Api.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public Task<IActionResult> UpdateMedia([FromBody] KeyedMedia media, CancellationToken cancellationToken)
         {
+            media.Deleted = false;
+
             using(LogContext.PushProperty("MediaId", media.Key))
             {
                 throw new NotImplementedException();
@@ -68,7 +72,7 @@ namespace OctoMedia.Api.Controllers
         }
 
         [HttpGet("{id}/file")]
-        public async Task<IActionResult> GetMediaFile(int id, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetMediaFile(Guid id, CancellationToken cancellationToken)
         {
             using(LogContext.PushProperty("MediaId", id))
             {
@@ -83,7 +87,7 @@ namespace OctoMedia.Api.Controllers
         }
 
         [HttpGet("{id}/file/small")]
-        public async Task<IActionResult> GetMediaSmallFile(int id, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetMediaSmallFile(Guid id, CancellationToken cancellationToken)
         {
             using(LogContext.PushProperty("MediaId", id))
             {
@@ -119,7 +123,7 @@ namespace OctoMedia.Api.Controllers
 
         [HttpPost("{id}/file")]
         [RequestSizeLimit(UploadLimit)]
-        public async Task<IActionResult> UploadMediaFile(int id, CancellationToken cancellationToken)
+        public async Task<IActionResult> UploadMediaFile(Guid id, CancellationToken cancellationToken)
         {
             using(LogContext.PushProperty("MediaId", id))
             {

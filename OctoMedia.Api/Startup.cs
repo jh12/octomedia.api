@@ -5,9 +5,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using OctoMedia.Api.Common.Options;
-using OctoMedia.Api.DataAccess.FileSystem.Configuration;
+using OctoMedia.Api.DataAccess.MongoDB;
 using OctoMedia.Api.DataAccess.Mssql;
-using OctoMedia.Api.DataAccess.Mssql.Configuration;
 using OctoMedia.Api.Middleware;
 using OctoMedia.Api.Modules;
 using Serilog;
@@ -42,27 +41,26 @@ namespace OctoMedia.Api
 
             services.AddHttpClient();
             
+            services.Configure<LoggingOptions>(Configuration.GetSection(LoggingOptions.Key));
+            //services.Configure<MssqlOptions>(Configuration.GetSection(MssqlOptions.Key));
             services.Configure<ProxyOptions>(Configuration.GetSection(ProxyOptions.Key));
+            services.Configure<MongoDBOptions>(Configuration.GetSection(MongoDBOptions.Key));
         }
 
         public void ConfigureContainer(ContainerBuilder builder)
         {
-            RegisterConfigurationSections(builder);
-
-            builder.RegisterModule(new MainModule(_hostEnvironment, Configuration));
-            builder.RegisterModule<MssqlModule>();
+            LoggingOptions loggingOptions = new LoggingOptions();
+            Configuration.GetSection(LoggingOptions.Key).Bind(loggingOptions);
+            
+            builder.RegisterModule(new MainModule(_hostEnvironment, loggingOptions));
+            //builder.RegisterModule<MssqlModule>();
+            builder.RegisterModule<MongoDBModule>();
 
 #if DEBUG
             builder.RegisterModule(new FileModule(true));
 #else
             builder.RegisterModule(new FileModule(false));
 #endif
-        }
-
-        private void RegisterConfigurationSections(ContainerBuilder builder)
-        {
-            builder.Register(f => Configuration.GetSection("Mssql").Get<MssqlConfiguration>()).As<MssqlConfiguration>();
-            builder.Register(f => Configuration.GetSection("FileSystem").Get<FileSystemConfiguration>()).As<FileSystemConfiguration>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
