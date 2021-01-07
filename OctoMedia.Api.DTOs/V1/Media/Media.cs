@@ -13,7 +13,7 @@ namespace OctoMedia.Api.DTOs.V1.Media
         public Dimension? Dimension { get; set; }
 
         public FileType FileType { get; set; } = null!;
-        public int SourceId { get; set; }
+        public Guid SourceId { get; set; }
         public Uri? ImageUri { get; set; }
 
         public bool? Mature { get; set; }
@@ -25,7 +25,7 @@ namespace OctoMedia.Api.DTOs.V1.Media
             
         }
 
-        public Media(string? title, string? description, Author? author, Dimension? dimension, int sourceId, Uri? imageUri, FileType fileType, bool? mature, bool? approved, bool deleted)
+        public Media(string? title, string? description, Author? author, Dimension? dimension, Guid sourceId, Uri? imageUri, FileType fileType, bool? mature, bool? approved, bool deleted)
         {
             Title = title;
             Description = description;

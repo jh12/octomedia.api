@@ -1,0 +1,137 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using MongoDB.Driver;
+using OctoMedia.Api.Common.Exceptions;
+using OctoMedia.Api.Common.Repositories;
+using OctoMedia.Api.DataAccess.MongoDB.Factories;
+using OctoMedia.Api.DataAccess.MongoDB.Mappers;
+using OctoMedia.Api.DataAccess.MongoDB.Models;
+using OctoMedia.Api.DataAccess.MongoDB.Models.SourceAttachments;
+using OctoMedia.Api.DTOs.V1.Media;
+using OctoMedia.Api.DTOs.V1.Media.Meta.Source;
+
+namespace OctoMedia.Api.DataAccess.MongoDB.Repositories
+{
+    public class MongoDBMediaRepository : IMediaRepository
+    {
+        private readonly MongoDBContextFactory _contextFactory;
+        private IMongoCollection<MongoMedia> _mediaStore;
+        private IMongoCollection<MongoSource> _sourceStore;
+
+        public MongoDBMediaRepository(MongoDBContextFactory contextFactory)
+        {
+            _contextFactory = contextFactory;
+            
+            _mediaStore = _contextFactory.GetContext<MongoMedia>(MongoDBCollectionNames.MediaCollection);
+            _sourceStore = _contextFactory.GetContext<MongoSource>(MongoDBCollectionNames.SourceCollection);
+        }
+
+        public async Task<KeyedSource> GetSourceAsync(Guid id, CancellationToken cancellationToken)
+        {
+            MongoSource? source = await _sourceStore
+                .Find(d => d.Id!.Value == id)
+                .SingleOrDefaultAsync(cancellationToken);
+
+            if (source == null)
+                throw new EntryNotFoundException(id);
+
+            return SourceMapper.Map(source);
+        }
+
+        public async Task<Guid> CreateSourceAsync(Source source, CancellationToken cancellationToken)
+        {
+            MongoSource? existingSource = await _sourceStore
+                .Find(d => d.SiteUri == source.SiteUri && !d.Deleted)
+                .SingleOrDefaultAsync(cancellationToken);
+
+            if (existingSource != null)
+                throw new EntryAlreadyExistsException(existingSource.Id!.Value, "An entry already exists with the supplied SiteUri");
+
+            MongoSource mongoSource = SourceMapper.Map(source);
+
+            await _sourceStore.InsertOneAsync(mongoSource, null, cancellationToken);
+
+            return mongoSource.Id!.Value;
+        }
+
+        public async Task UpdateSourceAsync(KeyedSource source, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<Guid[]> GetSourceMediaIdsAsync(Guid id, CancellationToken cancellationToken)
+        {
+            List<Guid> mediaIds = await _mediaStore
+                .Find(d => d.SourceId == id)
+                .Project(d => d.Id.Value)
+                .ToListAsync(cancellationToken);
+
+            return mediaIds.ToArray();
+        }
+
+        public async Task AttachRedditToSource(Guid id, RedditSource redditSource, CancellationToken cancellationToken)
+        {
+            MongoRedditAttachment mongoAttachment = SourceMapper.Map(redditSource);
+
+            UpdateDefinition<MongoSource> updateDefinition = Builders<MongoSource>.Update.Set("Attachment", mongoAttachment);
+            UpdateOptions updateOptions = new UpdateOptions(){IsUpsert = false};
+
+            await _sourceStore
+                .UpdateOneAsync(d => d.Id == id && !d.Deleted, updateDefinition, updateOptions, cancellationToken);
+        }
+
+        public async Task<KeyedMedia> GetMediaAsync(Guid id, CancellationToken cancellationToken)
+        {
+            MongoMedia? mongoMedia = await _mediaStore
+                .Find(m => m.Id == id)
+                .SingleOrDefaultAsync(cancellationToken);
+
+            if (mongoMedia == null || mongoMedia.Deleted)
+                throw new EntryNotFoundException(id);
+
+            return MediaMapper.Map(mongoMedia);
+        }
+
+        public async Task<Guid> CreateMediaAsync(Media media, CancellationToken cancellationToken)
+        {
+            if (!await _sourceStore.Find(d => d.Id == media.SourceId).AnyAsync(cancellationToken))
+                throw new EntryNotFoundException(media.SourceId, "No source found with the supplied SourceId");
+
+            MongoMedia? existingMedia = await _mediaStore
+                .Find(d => d.ImageUri == media.ImageUri && !d.Deleted)
+                .SingleOrDefaultAsync(cancellationToken);
+
+            if (existingMedia != null)
+                throw new EntryAlreadyExistsException(existingMedia.Id!.Value, "An entry already exists with the supplied ImageUri");
+
+            MongoMedia mongoMedia = MediaMapper.Map(media);
+            mongoMedia.CreatedAt = DateTime.UtcNow;
+
+            await _mediaStore.InsertOneAsync(mongoMedia, null, cancellationToken);
+
+            return mongoMedia.Id!.Value;
+        }
+
+        public async Task UpdateMediaAsync(KeyedMedia media, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<bool> MediaExistsAsync(Guid id, CancellationToken cancellationToken)
+        {
+            return await _mediaStore
+                .Find(d => d.Id == id && !d.Deleted)
+                .AnyAsync(cancellationToken);
+        }
+
+        public async Task<string> GetMediaExtensionAsync(Guid id, CancellationToken cancellationToken)
+        {
+            return await _mediaStore
+                .Find(d => d.Id == id && !d.Deleted)
+                .Project(d => d.FileType.Extension)
+                .SingleAsync(cancellationToken);
+        }
+    }
+}

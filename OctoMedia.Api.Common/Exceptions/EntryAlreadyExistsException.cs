@@ -3,15 +3,15 @@ using System.Net;
 
 namespace OctoMedia.Api.Common.Exceptions
 {
-    public class EntryAlreadyExistsException : EntryBaseException
+    public class EntryAlreadyExistsException : EntryBaseException<Guid>
     {
 
 
-        public EntryAlreadyExistsException(int key) : base(key, "An entry already exists", HttpStatusCode.Conflict)
+        public EntryAlreadyExistsException(Guid key) : base(key, "An entry already exists", HttpStatusCode.Conflict)
         {
         }
 
-        public EntryAlreadyExistsException(int key, string message) : base(key, message, HttpStatusCode.Conflict)
+        public EntryAlreadyExistsException(Guid key, string message) : base(key, message, HttpStatusCode.Conflict)
         {
         }
 

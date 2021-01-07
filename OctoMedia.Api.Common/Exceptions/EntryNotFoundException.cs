@@ -1,14 +1,15 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 
 namespace OctoMedia.Api.Common.Exceptions
 {
-    public class EntryNotFoundException : EntryBaseException
+    public class EntryNotFoundException : EntryBaseException<Guid>
     {
-        public EntryNotFoundException(int key) : base(key, "No entry found with the provided id", HttpStatusCode.NotFound)
+        public EntryNotFoundException(Guid key) : base(key, "No entry found with the provided id", HttpStatusCode.NotFound)
         {
         }
 
-        public EntryNotFoundException(int key, string message) : base(key, message, HttpStatusCode.NotFound)
+        public EntryNotFoundException(Guid key, string message) : base(key, message, HttpStatusCode.NotFound)
         { 
         }
     }

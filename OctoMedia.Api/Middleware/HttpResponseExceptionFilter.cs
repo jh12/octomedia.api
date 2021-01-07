@@ -37,7 +37,7 @@ namespace OctoMedia.Api.Middleware
                 };
                 context.ExceptionHandled = true;
             }
-            else if (context.Exception is EntryBaseException entryException)
+            else if (context.Exception is EntryBaseException<Guid> entryException)
             {
                 EntryResponse response = new EntryResponse(entryException.Key, entryException.Value);
 

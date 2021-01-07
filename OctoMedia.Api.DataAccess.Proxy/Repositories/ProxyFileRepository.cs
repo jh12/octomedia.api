@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -26,7 +27,7 @@ namespace OctoMedia.Api.DataAccess.Proxy.Repositories
             _proxyOptions = proxyOptions.Value;
         }
 
-        public async Task<MediaStreamMetadata> GetMediaAsync(int id, CancellationToken cancellationToken)
+        public async Task<MediaStreamMetadata> GetMediaAsync(Guid id, CancellationToken cancellationToken)
         {
             string baseUrl = _proxyOptions.BaseLocation;
 
@@ -42,7 +43,7 @@ namespace OctoMedia.Api.DataAccess.Proxy.Repositories
             return new MediaStreamMetadata(id, extension, response.Content.ReadAsStream(cancellationToken));
         }
 
-        public async Task SaveMediaAsync(int id, string extension, Stream stream, CancellationToken cancellationToken)
+        public async Task SaveMediaAsync(Guid id, string extension, Stream stream, CancellationToken cancellationToken)
         {
             throw new System.NotImplementedException();
         }

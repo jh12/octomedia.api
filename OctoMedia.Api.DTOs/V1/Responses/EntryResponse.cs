@@ -1,10 +1,11 @@
-﻿using OctoMedia.Api.DTOs.Interfaces;
+﻿using System;
+using OctoMedia.Api.DTOs.Interfaces;
 
 namespace OctoMedia.Api.DTOs.V1.Responses
 {
-    public class EntryResponse : IKeyed<int?>
+    public class EntryResponse : IKeyed<Guid?>
     {
-        public int? Key { get; set; }
+        public Guid? Key { get; set; }
         public string? Response { get; set; }
 
         public EntryResponse()
@@ -12,7 +13,7 @@ namespace OctoMedia.Api.DTOs.V1.Responses
             
         }
 
-        public EntryResponse(int? key, string? response)
+        public EntryResponse(Guid? key, string? response)
         {
             Key = key;
             Response = response;

@@ -22,7 +22,7 @@ namespace OctoMedia.Api.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<KeyedSource> GetSource(int id, CancellationToken cancellationToken)
+        public async Task<KeyedSource> GetSource(Guid id, CancellationToken cancellationToken)
         {
             using (LogContext.PushProperty("SourceId", id))
             {
@@ -36,13 +36,15 @@ namespace OctoMedia.Api.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         public async Task<IActionResult> CreateSource([FromBody] Source source, CancellationToken cancellationToken)
         {
-            int newId = await _mediaRepository.CreateSourceAsync(source, cancellationToken);
+            source.Deleted = false;
+
+            Guid newId = await _mediaRepository.CreateSourceAsync(source, cancellationToken);
 
             return CreatedAtAction(nameof(GetSource), new { id = newId }, new CreatedResponse(newId));
         }
 
         [HttpGet("{id}/attachments")]
-        public Task<SourceAttachments> GetAttachments(int id, CancellationToken cancellationToken)
+        public Task<SourceAttachments> GetAttachments(Guid id, CancellationToken cancellationToken)
         {
             using (LogContext.PushProperty("SourceId", id))
             {
@@ -51,11 +53,11 @@ namespace OctoMedia.Api.Controllers
         }
 
         [HttpGet("{id}/medias")]
-        public async Task<int[]> GetSourceMediaIds(int id, CancellationToken cancellationToken)
+        public async Task<Guid[]> GetSourceMediaIds(Guid id, CancellationToken cancellationToken)
         {
             using (LogContext.PushProperty("SourceId", id))
             {
-                int[] mediaIds = await _mediaRepository.GetSourceMediaIdsAsync(id, cancellationToken);
+                Guid[] mediaIds = await _mediaRepository.GetSourceMediaIdsAsync(id, cancellationToken);
 
                 return mediaIds;
             }
@@ -65,7 +67,7 @@ namespace OctoMedia.Api.Controllers
 
         [HttpPost("{id}/attach/reddit")]
         [ProducesResponseType(StatusCodes.Status201Created)]
-        public async Task<IActionResult> AttachRedditToSource(int id, [FromBody] RedditSource redditSource, CancellationToken cancellationToken)
+        public async Task<IActionResult> AttachRedditToSource(Guid id, [FromBody] RedditSource redditSource, CancellationToken cancellationToken)
         {
             using (LogContext.PushProperty("SourceId", id))
             {
