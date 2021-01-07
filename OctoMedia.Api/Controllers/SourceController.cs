@@ -44,7 +44,7 @@ namespace OctoMedia.Api.Controllers
         }
 
         [HttpGet("{id}/attachments")]
-        public Task<SourceAttachments> GetAttachments(Guid id, CancellationToken cancellationToken)
+        public Task<SourceAttachment> GetAttachments(Guid id, CancellationToken cancellationToken)
         {
             using (LogContext.PushProperty("SourceId", id))
             {
