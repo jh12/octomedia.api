@@ -8,7 +8,7 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Mappers
     {
         public static KeyedSource Map(MongoSource source)
         {
-            return new KeyedSource(source.Id!.Value, source.Title, source.SiteUri, source.RefererUri, source.Deleted);
+            return new KeyedSource(source.Id, source.Title, source.SiteUri, source.RefererUri, source.Deleted);
         }
 
         public static MongoSource Map(KeyedSource source)

@@ -4,10 +4,11 @@ using MongoDB.Bson.Serialization.IdGenerators;
 
 namespace OctoMedia.Api.DataAccess.MongoDB.Models
 {
+    [BsonIgnoreExtraElements]
     public class MongoSource
     {
         [BsonId(IdGenerator = typeof(CombGuidGenerator))]
-        public Guid? Id { get; set; }
+        public Guid Id { get; set; }
 
         public string? Title { get; set; }
 

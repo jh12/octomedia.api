@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace OctoMedia.Api.Common.Exceptions
+namespace OctoMedia.Api.Common.Exceptions.Entry
 {
     public abstract class EntryBaseException<T> : HttpResponseException
     {

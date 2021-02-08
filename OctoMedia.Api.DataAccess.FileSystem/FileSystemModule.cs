@@ -10,7 +10,6 @@ namespace OctoMedia.Api.DataAccess.FileSystem
         protected override void Load(ContainerBuilder builder)
         {
             builder.RegisterType<FileSystemFileRepository>().As<IFileRepository>();
-            builder.RegisterType<FileSystemStateRepository>().As<IStateRepository>();
         }
     }
 }

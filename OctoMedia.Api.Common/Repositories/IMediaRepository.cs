@@ -34,6 +34,10 @@ namespace OctoMedia.Api.Common.Repositories
         Task<bool> MediaExistsAsync(Guid id, CancellationToken cancellationToken);
         Task<string> GetMediaExtensionAsync(Guid id, CancellationToken cancellationToken);
 
+        Task<int> GetNextAvailableFileId();
+        Task<int> GetMediaFileId(Guid id, CancellationToken cancellationToken);
+        Task<KeyedMedia> GetMediaFromFileId(int id, CancellationToken cancellationToken);
+
         #endregion
     }
 }

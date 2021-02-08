@@ -20,8 +20,6 @@ namespace OctoMedia.Api.Modules
                 builder.RegisterType<ProxyFileRepository>().As<IFileRepository>();
             else
                 builder.RegisterType<FileSystemFileRepository>().As<IFileRepository>();
-
-            builder.RegisterType<FileSystemStateRepository>().As<IStateRepository>();
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net;
 
-namespace OctoMedia.Api.Common.Exceptions
+namespace OctoMedia.Api.Common.Exceptions.Entry
 {
     public class EntryNotFoundException : EntryBaseException<Guid>
     {

@@ -79,7 +79,9 @@ namespace OctoMedia.Api.Controllers
                 if (!await _mediaRepository.MediaExistsAsync(id, cancellationToken))
                     return NotFound(new TextResponse("No file found with the requested id"));
 
-                MediaStreamMetadata mediaStreamMetadata = await _fileRepository.GetMediaAsync(id, cancellationToken);
+                int mediaFileId = await _mediaRepository.GetMediaFileId(id, cancellationToken);
+
+                MediaStreamMetadata mediaStreamMetadata = await _fileRepository.GetMediaAsync(mediaFileId, cancellationToken);
                 string mimeType = MimeTypeMap.GetMimeType(mediaStreamMetadata.Extension);
 
                 return File(mediaStreamMetadata.Content, mimeType, true);
@@ -94,7 +96,9 @@ namespace OctoMedia.Api.Controllers
                 if (!await _mediaRepository.MediaExistsAsync(id, cancellationToken))
                     return NotFound(new TextResponse("No file found with the requested id"));
 
-                MediaStreamMetadata? mediaStreamMetadata = await _fileRepository.GetMediaAsync(id, cancellationToken);
+                int mediaFileId = await _mediaRepository.GetMediaFileId(id, cancellationToken);
+
+                MediaStreamMetadata? mediaStreamMetadata = await _fileRepository.GetMediaAsync(mediaFileId, cancellationToken);
                 await using (mediaStreamMetadata.Content)
                 {
                     string mimeType = MimeTypeMap.GetMimeType(mediaStreamMetadata.Extension);
@@ -149,16 +153,24 @@ namespace OctoMedia.Api.Controllers
                 if (!string.Equals(streamMimeType, contentType, StringComparison.CurrentCultureIgnoreCase))
                     return BadRequest(new TextResponse("Content-Type did not match the request body"));
 
+                int mediaFileId = await _mediaRepository.GetMediaFileId(id, cancellationToken);
+
                 string extension = MimeTypeMap.GetExtension(contentType).Substring(1);
                 string metaExtension = await _mediaRepository.GetMediaExtensionAsync(id, cancellationToken);
 
                 if (!string.Equals(extension, metaExtension, StringComparison.CurrentCultureIgnoreCase))
                     return BadRequest(new TextResponse("Content-Type did not match the registered metadata"));
 
-                await _fileRepository.SaveMediaAsync(id, extension, Request.Body, cancellationToken);
+                await _fileRepository.SaveMediaAsync(mediaFileId, extension, Request.Body, cancellationToken);
 
                 return Ok();
             }
+        }
+
+        [HttpGet("from/fileid/{id}")]
+        public async Task<KeyedMedia> GetMediaFromFileId(int id, CancellationToken cancellationToken)
+        {
+            return await _mediaRepository.GetMediaFromFileId(id, cancellationToken);
         }
     }
 }

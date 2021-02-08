@@ -26,7 +26,6 @@
     <ProjectReference Include="..\OctoMedia.Api.Common\OctoMedia.Api.Common.csproj" />
     <ProjectReference Include="..\OctoMedia.Api.DataAccess.FileSystem\OctoMedia.Api.DataAccess.FileSystem.csproj" />
     <ProjectReference Include="..\OctoMedia.Api.DataAccess.MongoDB\OctoMedia.Api.DataAccess.MongoDB.csproj" />
-    <ProjectReference Include="..\OctoMedia.Api.DataAccess.Mssql\OctoMedia.Api.DataAccess.Mssql.csproj" />
     <ProjectReference Include="..\OctoMedia.Api.DataAccess.Proxy\OctoMedia.Api.DataAccess.Proxy.csproj" />
     <ProjectReference Include="..\OctoMedia.Api.DTOs\OctoMedia.Api.DTOs.csproj" />
   </ItemGroup>

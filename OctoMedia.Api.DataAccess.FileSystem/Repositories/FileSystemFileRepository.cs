@@ -3,109 +3,103 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using OctoMedia.Api.Common.Exceptions;
+using Microsoft.Extensions.Options;
+using OctoMedia.Api.Common.Exceptions.File;
 using OctoMedia.Api.Common.Models;
+using OctoMedia.Api.Common.Options;
 using OctoMedia.Api.Common.Repositories;
-using OctoMedia.Api.DataAccess.FileSystem.Configuration;
 
 namespace OctoMedia.Api.DataAccess.FileSystem.Repositories
 {
     public class FileSystemFileRepository : IFileRepository
     {
-        private readonly FileSystemConfiguration _configuration;
+        private readonly FileSystemOptions _options;
         private const int DefaultBufferSize = 81920;
 
-        public FileSystemFileRepository(FileSystemConfiguration configuration)
+        public FileSystemFileRepository(IOptions<FileSystemOptions> options)
         {
-            _configuration = configuration;
+            _options = options.Value;
         }
 
-        public Task<MediaStreamMetadata> GetMediaAsync(Guid id, CancellationToken cancellationToken)
+        public Task<MediaStreamMetadata> GetMediaAsync(int id, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException("Id changed to Guid");
-            
-            //string location = FindFileFromId(id);
+            string location = FindFileFromId(id);
 
-            //string extension = Path.GetExtension(location).Substring(1);
+            string extension = Path.GetExtension(location).Substring(1);
 
-            //FileStream fileStream = File.OpenRead(location);
+            FileStream fileStream = File.OpenRead(location);
 
-            //return Task.FromResult(new MediaStreamMetadata(id, extension, fileStream));
+            return Task.FromResult(new MediaStreamMetadata(id, extension, fileStream));
         }
 
-        public async Task SaveMediaAsync(Guid id, string extension, Stream stream, CancellationToken cancellationToken)
+        public async Task SaveMediaAsync(int id, string extension, Stream stream, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException("Id changed to Guid");
-            //using (stream)
-            //{
-            //    string mediaLocation = GetMediaLocation(id) + $".{extension}"; 
+            using (stream)
+            {
+                string mediaLocation = GetMediaLocation(id) + $".{extension}";
 
-            //    if (FileWithExtensionExists(mediaLocation))
-            //        throw new EntryAlreadyExistsException(id);
+                if (FileWithExtensionExists(mediaLocation))
+                    throw new MediaFileAlreadyExistsException(id);
 
-            //    string directory = Path.GetDirectoryName(mediaLocation);
-            //    if (!Directory.Exists(directory))
-            //        Directory.CreateDirectory(directory);
+                string directory = Path.GetDirectoryName(mediaLocation)!;
+                if (!Directory.Exists(directory))
+                    Directory.CreateDirectory(directory);
 
-            //    using FileStream fileStream = File.OpenWrite(mediaLocation);
-            //    await stream.CopyToAsync(fileStream, DefaultBufferSize, cancellationToken);
-            //}
+                using FileStream fileStream = File.OpenWrite(mediaLocation);
+                await stream.CopyToAsync(fileStream, DefaultBufferSize, cancellationToken);
+            }
         }
 
-        private string FindFileFromId(Guid id)
+        private string FindFileFromId(int id)
         {
-            throw new NotImplementedException("Id changed to Guid");
-            //string fileWithoutExtension = GetMediaLocation(id);
+            string fileWithoutExtension = GetMediaLocation(id);
 
-            //string directory = Path.GetDirectoryName(fileWithoutExtension);
+            string directory = Path.GetDirectoryName(fileWithoutExtension)!;
 
-            //if(!Directory.Exists(directory))
-            //    throw new EntryNotFoundException(id);
+            if (!Directory.Exists(directory))
+                throw new MediaFileNotFoundException(id);
 
-            //string filename = Path.GetFileNameWithoutExtension(fileWithoutExtension);
+            string filename = Path.GetFileNameWithoutExtension(fileWithoutExtension);
 
-            //string? location = Directory.GetFiles(directory, $"{filename}.*").SingleOrDefault();
+            string? location = Directory.GetFiles(directory, $"{filename}.*").SingleOrDefault();
 
-            //if(location == null)
-            //    throw new EntryNotFoundException(id);
+            if (location == null)
+                throw new MediaFileNotFoundException(id);
 
-            //return location;
+            return location;
         }
 
         private bool FileWithExtensionExists(string file)
         {
-            throw new NotImplementedException("Id changed to Guid");
-            //string directory = Path.GetDirectoryName(file);
-            //if (!Directory.Exists(directory))
-            //    return false;
+            string directory = Path.GetDirectoryName(file)!;
+            if (!Directory.Exists(directory))
+                return false;
 
-            //string filename = Path.GetFileNameWithoutExtension(file);
+            string filename = Path.GetFileNameWithoutExtension(file);
 
-            //return Directory.GetFiles(directory, $"{filename}.*").Any();
+            return Directory.GetFiles(directory, $"{filename}.*").Any();
         }
 
-        private string GetMediaLocation(Guid id)
+        private string GetMediaLocation(int id)
         {
-            throw new NotImplementedException("Id changed to Guid");
-            //string[] folderHierarchy = ExtractFolderHierarchy(id);
+            string[] folderHierarchy = ExtractFolderHierarchy(id);
 
-            //string mediaRoot = _configuration.MediaLocation;
+            string mediaRoot = _options.MediaLocation;
 
-            //return Path.Combine(mediaRoot, string.Join(Path.DirectorySeparatorChar.ToString(), folderHierarchy));
+            return Path.Combine(mediaRoot, string.Join(Path.DirectorySeparatorChar.ToString(), folderHierarchy));
         }
 
-        private string[] ExtractFolderHierarchy(Guid id)
+        private string[] ExtractFolderHierarchy(int id)
         {
-            throw new NotImplementedException("Id changed to Guid");
-            //const int hierarchyLevels = 4;
-            //const int filesPerLevel = 1000;
+            const int hierarchyLevels = 4;
+            const int filesPerLevel = 1000;
 
-            //int digitsPerLevel = (int) Math.Log10(filesPerLevel);
-            //int totalDigitWidth = hierarchyLevels * digitsPerLevel;
+            int digitsPerLevel = (int)Math.Log10(filesPerLevel);
+            int totalDigitWidth = hierarchyLevels * digitsPerLevel;
 
-            //string unsplitPath = id.ToString().PadLeft(totalDigitWidth, '0');
+            string unsplitPath = id.ToString().PadLeft(totalDigitWidth, '0');
 
-            //return Enumerable.Range(0, hierarchyLevels).Select(i => unsplitPath.Substring(i * digitsPerLevel, digitsPerLevel)).ToArray();
+            return Enumerable.Range(0, hierarchyLevels).Select(i => unsplitPath.Substring(i * digitsPerLevel, digitsPerLevel)).ToArray();
         }
     }
 }

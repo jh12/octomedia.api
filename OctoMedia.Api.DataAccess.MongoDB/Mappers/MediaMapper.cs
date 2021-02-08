@@ -1,5 +1,4 @@
-﻿using System;
-using OctoMedia.Api.DataAccess.MongoDB.Models;
+﻿using OctoMedia.Api.DataAccess.MongoDB.Models;
 using OctoMedia.Api.DTOs.V1.Media;
 using OctoMedia.Api.DTOs.V1.Media.Meta;
 
@@ -14,7 +13,7 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Mappers
             FileType fileType = new FileType(media.FileType.Extension, media.FileType.Class);
 
             return new KeyedMedia(
-                media.Id ?? throw new ArgumentNullException(nameof(media.Id), "No ID for media"),
+                media.Id,
                 media.Title,
                 media.Description,
                 author,
@@ -53,7 +52,6 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Mappers
                 ImageUri = media.ImageUri,
                 FileType = fileType,
                 Mature = media.Mature,
-                FileHash = null,
                 Deleted = media.Deleted
             };
         }

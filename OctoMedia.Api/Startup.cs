@@ -6,7 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using OctoMedia.Api.Common.Options;
 using OctoMedia.Api.DataAccess.MongoDB;
-using OctoMedia.Api.DataAccess.Mssql;
 using OctoMedia.Api.Middleware;
 using OctoMedia.Api.Modules;
 using Serilog;
@@ -42,9 +41,9 @@ namespace OctoMedia.Api
             services.AddHttpClient();
             
             services.Configure<LoggingOptions>(Configuration.GetSection(LoggingOptions.Key));
-            //services.Configure<MssqlOptions>(Configuration.GetSection(MssqlOptions.Key));
             services.Configure<ProxyOptions>(Configuration.GetSection(ProxyOptions.Key));
             services.Configure<MongoDBOptions>(Configuration.GetSection(MongoDBOptions.Key));
+            services.Configure<FileSystemOptions>(Configuration.GetSection(FileSystemOptions.Key));
         }
 
         public void ConfigureContainer(ContainerBuilder builder)
@@ -53,14 +52,13 @@ namespace OctoMedia.Api
             Configuration.GetSection(LoggingOptions.Key).Bind(loggingOptions);
             
             builder.RegisterModule(new MainModule(_hostEnvironment, loggingOptions));
-            //builder.RegisterModule<MssqlModule>();
             builder.RegisterModule<MongoDBModule>();
 
-#if DEBUG
-            builder.RegisterModule(new FileModule(true));
-#else
+//#if DEBUG
+//            builder.RegisterModule(new FileModule(true));
+//#else
             builder.RegisterModule(new FileModule(false));
-#endif
+//#endif
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

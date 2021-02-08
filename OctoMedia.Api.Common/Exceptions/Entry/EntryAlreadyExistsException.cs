@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Net;
 
-namespace OctoMedia.Api.Common.Exceptions
+namespace OctoMedia.Api.Common.Exceptions.Entry
 {
     public class EntryAlreadyExistsException : EntryBaseException<Guid>
     {
-
-
         public EntryAlreadyExistsException(Guid key) : base(key, "An entry already exists", HttpStatusCode.Conflict)
         {
         }

@@ -4,6 +4,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using MongoDB.Driver;
 using OctoMedia.Api.Common.Exceptions;
+using OctoMedia.Api.Common.Exceptions.Entry;
+using OctoMedia.Api.Common.Exceptions.File;
 using OctoMedia.Api.Common.Repositories;
 using OctoMedia.Api.DataAccess.MongoDB.Factories;
 using OctoMedia.Api.DataAccess.MongoDB.Mappers;
@@ -19,6 +21,7 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Repositories
         private readonly MongoDBContextFactory _contextFactory;
         private IMongoCollection<MongoMedia> _mediaStore;
         private IMongoCollection<MongoSource> _sourceStore;
+        private IMongoCollection<MongoIntCounter> _intCounterStore;
 
         public MongoDBMediaRepository(MongoDBContextFactory contextFactory)
         {
@@ -26,12 +29,13 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Repositories
             
             _mediaStore = _contextFactory.GetContext<MongoMedia>(MongoDBCollectionNames.MediaCollection);
             _sourceStore = _contextFactory.GetContext<MongoSource>(MongoDBCollectionNames.SourceCollection);
+            _intCounterStore = _contextFactory.GetContext<MongoIntCounter>(MongoDBCollectionNames.IntCounterCollection);
         }
 
         public async Task<KeyedSource> GetSourceAsync(Guid id, CancellationToken cancellationToken)
         {
             MongoSource? source = await _sourceStore
-                .Find(d => d.Id!.Value == id)
+                .Find(d => d.Id == id)
                 .SingleOrDefaultAsync(cancellationToken);
 
             if (source == null)
@@ -47,13 +51,13 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Repositories
                 .SingleOrDefaultAsync(cancellationToken);
 
             if (existingSource != null)
-                throw new EntryAlreadyExistsException(existingSource.Id!.Value, "An entry already exists with the supplied SiteUri");
+                throw new EntryAlreadyExistsException(existingSource.Id, "An entry already exists with the supplied SiteUri");
 
             MongoSource mongoSource = SourceMapper.Map(source);
 
             await _sourceStore.InsertOneAsync(mongoSource, null, cancellationToken);
 
-            return mongoSource.Id!.Value;
+            return mongoSource.Id;
         }
 
         public async Task UpdateSourceAsync(KeyedSource source, CancellationToken cancellationToken)
@@ -65,7 +69,7 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Repositories
         {
             List<Guid> mediaIds = await _mediaStore
                 .Find(d => d.SourceId == id)
-                .Project(d => d.Id.Value)
+                .Project(d => d.Id)
                 .ToListAsync(cancellationToken);
 
             return mediaIds.ToArray();
@@ -78,7 +82,7 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Repositories
             UpdateDefinition<MongoSource> updateDefinition = Builders<MongoSource>.Update.Set("Attachment", mongoAttachment);
             UpdateOptions updateOptions = new UpdateOptions(){IsUpsert = false};
 
-            await _sourceStore
+            UpdateResult updateOneAsync = await _sourceStore
                 .UpdateOneAsync(d => d.Id == id && !d.Deleted, updateDefinition, updateOptions, cancellationToken);
         }
 
@@ -104,14 +108,14 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Repositories
                 .SingleOrDefaultAsync(cancellationToken);
 
             if (existingMedia != null)
-                throw new EntryAlreadyExistsException(existingMedia.Id!.Value, "An entry already exists with the supplied ImageUri");
+                throw new EntryAlreadyExistsException(existingMedia.Id, "An entry already exists with the supplied ImageUri");
 
             MongoMedia mongoMedia = MediaMapper.Map(media);
             mongoMedia.CreatedAt = DateTime.UtcNow;
 
             await _mediaStore.InsertOneAsync(mongoMedia, null, cancellationToken);
 
-            return mongoMedia.Id!.Value;
+            return mongoMedia.Id;
         }
 
         public async Task UpdateMediaAsync(KeyedMedia media, CancellationToken cancellationToken)
@@ -132,6 +136,53 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Repositories
                 .Find(d => d.Id == id && !d.Deleted)
                 .Project(d => d.FileType.Extension)
                 .SingleAsync(cancellationToken);
+        }
+
+        public async Task<int> GetNextAvailableFileId()
+        {
+            UpdateDefinition<MongoIntCounter> updateDefinition = Builders<MongoIntCounter>.Update.Inc(c => c.Value, 1);
+            var updateOptions = new FindOneAndUpdateOptions<MongoIntCounter, MongoIntCounter>{ReturnDocument = ReturnDocument.Before};
+
+            MongoIntCounter? intCounter = await _intCounterStore.FindOneAndUpdateAsync<MongoIntCounter>(c => c.Key == "FileId", updateDefinition, updateOptions);
+
+            if (intCounter == null)
+            {
+                await _intCounterStore.InsertOneAsync(new MongoIntCounter {Key = "FileId", Value = 2});
+                return 1;
+            }
+
+            return intCounter.Value;
+        }
+
+        public async Task<int> GetMediaFileId(Guid id, CancellationToken cancellationToken)
+        {
+            MongoMediaFile? mediaFile = await _mediaStore
+                .Find(d => d.Id == id && !d.Deleted)
+                .Project(d => d.File)
+                .SingleOrDefaultAsync(cancellationToken);
+
+            if (mediaFile != null)
+                return mediaFile.Id;
+
+            int availableFileId = await GetNextAvailableFileId();
+            UpdateDefinition<MongoMedia> updateDefinition = Builders<MongoMedia>.Update.Set(m => m.File, new MongoMediaFile {Id = availableFileId});
+
+            await _mediaStore
+                .UpdateOneAsync(d => d.Id == id && !d.Deleted, updateDefinition, cancellationToken: cancellationToken);
+
+            return availableFileId;
+        }
+
+        public async Task<KeyedMedia> GetMediaFromFileId(int id, CancellationToken cancellationToken)
+        {
+            MongoMedia? mongoMedia = await _mediaStore
+                .Find(m => m.File.Id == id)
+                .SingleOrDefaultAsync(cancellationToken);
+
+            if (mongoMedia == null || mongoMedia.Deleted)
+                throw new MediaFileNotFoundException(id);
+
+            return MediaMapper.Map(mongoMedia);
         }
     }
 }

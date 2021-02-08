@@ -3,6 +3,7 @@ using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using OctoMedia.Api.Common.Exceptions;
+using OctoMedia.Api.Common.Exceptions.Entry;
 using OctoMedia.Api.DTOs.V1.Responses;
 using Serilog;
 
