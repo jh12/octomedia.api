@@ -43,12 +43,12 @@ namespace OctoMedia.Api.DataAccess.Proxy.Repositories
             return new MediaStreamMetadata(id, extension, response.Content.ReadAsStream(cancellationToken));
         }
 
-        public async Task SaveMediaAsync(int id, string extension, Stream stream, CancellationToken cancellationToken)
+        public Task SaveMediaAsync(int id, string extension, Stream stream, CancellationToken cancellationToken)
         {
             throw new System.NotImplementedException();
         }
 
-        public async Task<bool> MediaExistsAsync(int id, string extension)
+        public Task<bool> MediaExistsAsync(int id, string extension)
         {
             throw new NotImplementedException();
         }

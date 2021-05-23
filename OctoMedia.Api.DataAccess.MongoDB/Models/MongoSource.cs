@@ -12,7 +12,7 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Models
 
         public string? Title { get; set; }
 
-        public Uri SiteUri { get; set; }
+        public Uri SiteUri { get; set; } = null!;
         public Uri? RefererUri { get; set; }
 
         public bool Deleted { get; set; }

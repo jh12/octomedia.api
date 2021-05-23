@@ -4,6 +4,6 @@
     {
         public const string Key = "Proxy";
 
-        public string BaseLocation { get; set; }
+        public string BaseLocation { get; set; } = null!;
     }
 }

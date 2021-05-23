@@ -61,7 +61,7 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Repositories
             return mongoSource.Id;
         }
 
-        public async Task UpdateSourceAsync(KeyedSource source, CancellationToken cancellationToken)
+        public Task UpdateSourceAsync(KeyedSource source, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
@@ -139,7 +139,7 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Repositories
             return mongoMedia.Id;
         }
 
-        public async Task UpdateMediaAsync(KeyedMedia media, CancellationToken cancellationToken)
+        public Task UpdateMediaAsync(KeyedMedia media, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
@@ -168,8 +168,8 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Repositories
         public async Task<string> GetMediaExtensionAsync(Guid id, CancellationToken cancellationToken)
         {
             return await _mediaStore
-                .Find(d => d.Id == id && !d.Deleted)
-                .Project(d => d.FileType.Extension)
+                .Find(d => d.Id == id && !d.Deleted && d.FileType != null)
+                .Project(d => d.FileType!.Extension)
                 .SingleAsync(cancellationToken);
         }
 
@@ -211,7 +211,7 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Repositories
         public async Task<KeyedMedia> GetMediaFromFileId(int id, CancellationToken cancellationToken)
         {
             MongoMedia? mongoMedia = await _mediaStore
-                .Find(m => m.File.Id == id)
+                .Find(m => m.File != null && m.File.Id == id)
                 .SingleOrDefaultAsync(cancellationToken);
 
             if (mongoMedia == null || mongoMedia.Deleted)

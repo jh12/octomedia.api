@@ -4,7 +4,7 @@
     {
         public const string Key = "Logging";
 
-        public string SeqUrl { get; set; }
-        public string SeqAppToken { get; set; }
+        public string SeqUrl { get; set; } = null!;
+        public string SeqAppToken { get; set; } = null!;
     }
 }

@@ -19,7 +19,7 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Models
         [BsonGuidRepresentation(GuidRepresentation.Standard)]
         public Guid SourceId { get; set; }
         public Uri? ImageUri { get; set; }
-        public MongoMediaFileType FileType { get; set; }
+        public MongoMediaFileType? FileType { get; set; }
         public MongoMediaFile? File { get; set; }
         public bool? Mature { get; set; }
         public bool? Approved { get; set; }
@@ -32,7 +32,7 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Models
 
     internal class MongoMediaAuthor
     {
-        public string Username { get; set; }
+        public string? Username { get; set; }
     }
 
     internal class MongoMediaDimensions
@@ -43,13 +43,13 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Models
 
     internal class MongoMediaFileType
     {
-        public string Extension { get; set; }
+        public string Extension { get; set; } = null!;
         public FileClass Class { get; set; }
     }
 
     internal class MongoMediaFile
     {
         public int Id { get; set; }
-        public byte[] Hash { get; set; }
+        public byte[]? Hash { get; set; }
     }
 }
