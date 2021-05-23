@@ -32,7 +32,7 @@ jobs:
           docker logout ghcr.io
           dotnet nuget add source "https://nuget.pkg.github.com/jh12/OctoMedia.Api/index.json" -n "GitHub" -u jh12
           dotnet pack ./OctoMedia.Api.DTOs/OctoMedia.Api.DTOs.csproj --configuration Release --include-symbols -p:SymbolPackageFormat=snupkg -p:PackageVersion=$RELEASE_VERSION
-          dotnet nuget push **/*.nupkg --source "GitHub"
+          dotnet nuget push **/*.nupkg --source "GitHub" --api-key ${{ secrets.CONTAINER_REGISTRY_PAT }}
       # Master branch
       - name: Docker master publish
         if: github.event.base_ref == 'refs/heads/master'
