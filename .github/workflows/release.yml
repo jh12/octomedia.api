@@ -21,7 +21,7 @@ jobs:
         id: previoustag
         uses: WyriHaximus/github-action-get-previous-tag@master
       # Alpha branch
-      - name: Docker alpha publish
+      - name: Publish alpha
         if: github.event.base_ref == 'refs/heads/alpha'
         run: |
           SEMVER=${{ steps.previoustag.outputs.tag }}
@@ -31,9 +31,9 @@ jobs:
           docker push --all-tags ghcr.io/jh12/octomedia.api/octomedia.api
           docker logout ghcr.io
           dotnet pack ./OctoMedia.Api.DTOs/OctoMedia.Api.DTOs.csproj --configuration Release --include-symbols -p:SymbolPackageFormat=snupkg -p:PackageVersion=$RELEASE_VERSION
-          dotnet nuget push **/*.nupkg --source "https://nuget.pkg.github.com/jh12/OctoMedia.Api/index.json" --api-key ${{ secrets.CONTAINER_REGISTRY_PAT }}
+          dotnet nuget push **/*.nupkg --source "https://nuget.pkg.github.com/jh12/index.json" --api-key ${{ secrets.CONTAINER_REGISTRY_PAT }}
       # Master branch
-      - name: Docker master publish
+      - name: Publish master
         if: github.event.base_ref == 'refs/heads/master'
         run: |
           SEMVER=${{ steps.previoustag.outputs.tag }}
