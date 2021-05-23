@@ -30,8 +30,9 @@ jobs:
           docker build --build-arg RELEASE_VERSION=$RELEASE_VERSION -f OctoMedia.Api/Dockerfile -t ghcr.io/jh12/octomedia.api/octomedia.api:latest-alpha -t ghcr.io/jh12/octomedia.api/octomedia.api:$RELEASE_VERSION .
           docker push --all-tags ghcr.io/jh12/octomedia.api/octomedia.api
           docker logout ghcr.io
-          #dotnet pack ./OctoMedia.Api.DTOs/OctoMedia.Api.DTOs.csproj --configuration Release --include-symbols -p:SymbolPackageFormat=snupkg -p:PackageVersion=$RELEASE_VERSION
-          #dotnet nuget push **/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source ${{ secrets.NUGET_SOURCE }}
+          dotnet nuget add source "https://nuget.pkg.github.com/jh12/OctoMedia.Api/index.json" -n "GitHub" -u jh12
+          dotnet pack ./OctoMedia.Api.DTOs/OctoMedia.Api.DTOs.csproj --configuration Release --include-symbols -p:SymbolPackageFormat=snupkg -p:PackageVersion=$RELEASE_VERSION
+          dotnet nuget push **/*.nupkg --source "GitHub"
       # Master branch
       - name: Docker master publish
         if: github.event.base_ref == 'refs/heads/master'
