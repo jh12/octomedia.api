@@ -32,22 +32,27 @@ namespace OctoMedia.Api.DataAccess.FileSystem.Repositories
             return Task.FromResult(new MediaStreamMetadata(id, extension, fileStream));
         }
 
+        public Task<bool> MediaExistsAsync(int id, string extension)
+        {
+            string mediaLocation = GetMediaLocation(id) + $".{extension}";
+
+            return Task.FromResult(FileWithExtensionExists(mediaLocation));
+        }
+
         public async Task SaveMediaAsync(int id, string extension, Stream stream, CancellationToken cancellationToken)
         {
-            using (stream)
-            {
-                string mediaLocation = GetMediaLocation(id) + $".{extension}";
+            string mediaLocation = GetMediaLocation(id) + $".{extension}";
 
-                if (FileWithExtensionExists(mediaLocation))
-                    throw new MediaFileAlreadyExistsException(id);
+            if (FileWithExtensionExists(mediaLocation))
+                throw new MediaFileAlreadyExistsException(id);
 
-                string directory = Path.GetDirectoryName(mediaLocation)!;
-                if (!Directory.Exists(directory))
-                    Directory.CreateDirectory(directory);
+            string directory = Path.GetDirectoryName(mediaLocation)!;
+            if (!Directory.Exists(directory))
+                Directory.CreateDirectory(directory);
 
-                using FileStream fileStream = File.OpenWrite(mediaLocation);
-                await stream.CopyToAsync(fileStream, DefaultBufferSize, cancellationToken);
-            }
+            await using FileStream fileStream = File.OpenWrite(mediaLocation);
+            // ReSharper disable once MethodSupportsCancellation
+            await stream.CopyToAsync(fileStream, DefaultBufferSize);
         }
 
         private string FindFileFromId(int id)

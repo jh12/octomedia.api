@@ -50,5 +50,6 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Models
     internal class MongoMediaFile
     {
         public int Id { get; set; }
+        public byte[] Hash { get; set; }
     }
 }

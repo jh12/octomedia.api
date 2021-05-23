@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OctoMedia.Api.Common.Repositories;
+using OctoMedia.Api.DTOs.V1.Media;
 using OctoMedia.Api.DTOs.V1.Media.Meta.Source;
 using OctoMedia.Api.DTOs.V1.Responses;
 using Serilog.Context;
@@ -32,6 +33,12 @@ namespace OctoMedia.Api.Controllers
             }
         }
 
+        [HttpGet("sample")]
+        public Task<KeyedSource[]> GetSample(int size = 20, CancellationToken cancellationToken = default)
+        {
+            return _mediaRepository.GetSourceSampleAsync(size, cancellationToken);
+        }
+
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         public async Task<IActionResult> CreateSource([FromBody] Source source, CancellationToken cancellationToken)
@@ -52,7 +59,7 @@ namespace OctoMedia.Api.Controllers
             }
         }
 
-        [HttpGet("{id}/medias")]
+        [HttpGet("{id}/medias/ids")]
         public async Task<Guid[]> GetSourceMediaIds(Guid id, CancellationToken cancellationToken)
         {
             using (LogContext.PushProperty("SourceId", id))
@@ -60,6 +67,17 @@ namespace OctoMedia.Api.Controllers
                 Guid[] mediaIds = await _mediaRepository.GetSourceMediaIdsAsync(id, cancellationToken);
 
                 return mediaIds;
+            }
+        }
+
+        [HttpGet("{id}/medias")]
+        public async Task<KeyedMedia[]> GetSourceMedia(Guid id, CancellationToken cancellationToken)
+        {
+            using (LogContext.PushProperty("SourceId", id))
+            {
+                KeyedMedia[] medias = await _mediaRepository.GetSourceMediasAsync(id, cancellationToken);
+
+                return medias;
             }
         }
 

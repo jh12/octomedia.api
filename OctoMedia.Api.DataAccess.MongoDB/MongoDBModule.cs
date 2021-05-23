@@ -12,7 +12,7 @@ namespace OctoMedia.Api.DataAccess.MongoDB
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterType<MongoDBContextFactory>();
+            builder.RegisterType<MongoDBContextFactory>().As<IStartable>().AsSelf();
 
             builder.RegisterType<MongoDBMediaRepository>().As<IMediaRepository>().SingleInstance();
 

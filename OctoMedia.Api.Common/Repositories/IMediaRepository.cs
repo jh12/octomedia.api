@@ -14,8 +14,10 @@ namespace OctoMedia.Api.Common.Repositories
         Task<Guid> CreateSourceAsync(Source source, CancellationToken cancellationToken);
         Task UpdateSourceAsync(KeyedSource source, CancellationToken cancellationToken);
 
-        Task<Guid[]> GetSourceMediaIdsAsync(Guid id, CancellationToken cancellationToken);
+        Task<Guid[]> GetSourceMediaIdsAsync(Guid sourceId, CancellationToken cancellationToken);
+        Task<KeyedMedia[]> GetSourceMediasAsync(Guid sourceId, CancellationToken cancellationToken);
 
+        Task<KeyedSource[]> GetSourceSampleAsync(int size, CancellationToken cancellationToken);
 
         #region Reddit Attachment
 
@@ -30,6 +32,8 @@ namespace OctoMedia.Api.Common.Repositories
         Task<KeyedMedia> GetMediaAsync(Guid id, CancellationToken cancellationToken);
         Task<Guid> CreateMediaAsync(Media media, CancellationToken cancellationToken);
         Task UpdateMediaAsync(KeyedMedia media, CancellationToken cancellationToken);
+        Task SetMediaApproval(Guid id, bool approved, CancellationToken cancellationToken);
+        Task SetMediaMature(Guid id, bool mature, CancellationToken cancellationToken);
 
         Task<bool> MediaExistsAsync(Guid id, CancellationToken cancellationToken);
         Task<string> GetMediaExtensionAsync(Guid id, CancellationToken cancellationToken);
@@ -37,6 +41,8 @@ namespace OctoMedia.Api.Common.Repositories
         Task<int> GetNextAvailableFileId();
         Task<int> GetMediaFileId(Guid id, CancellationToken cancellationToken);
         Task<KeyedMedia> GetMediaFromFileId(int id, CancellationToken cancellationToken);
+
+        Task SaveMediaHash(Guid id, byte[] hashBytes, CancellationToken cancellationToken);
 
         #endregion
     }

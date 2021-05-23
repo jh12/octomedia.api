@@ -9,5 +9,6 @@ namespace OctoMedia.Api.Common.Repositories
     {
         Task<MediaStreamMetadata> GetMediaAsync(int id, CancellationToken cancellationToken);
         Task SaveMediaAsync(int id, string extension, Stream stream, CancellationToken cancellationToken);
+        Task<bool> MediaExistsAsync(int id, string extension);
     }
 }

@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MongoDB.Driver;
-using OctoMedia.Api.Common.Exceptions;
+using MongoDB.Driver.Linq;
 using OctoMedia.Api.Common.Exceptions.Entry;
 using OctoMedia.Api.Common.Exceptions.File;
 using OctoMedia.Api.Common.Repositories;
@@ -65,14 +66,34 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Repositories
             throw new NotImplementedException();
         }
 
-        public async Task<Guid[]> GetSourceMediaIdsAsync(Guid id, CancellationToken cancellationToken)
+        public async Task<Guid[]> GetSourceMediaIdsAsync(Guid sourceId, CancellationToken cancellationToken)
         {
             List<Guid> mediaIds = await _mediaStore
-                .Find(d => d.SourceId == id)
+                .Find(d => d.SourceId == sourceId)
                 .Project(d => d.Id)
                 .ToListAsync(cancellationToken);
 
             return mediaIds.ToArray();
+        }
+
+        public async Task<KeyedMedia[]> GetSourceMediasAsync(Guid sourceId, CancellationToken cancellationToken)
+        {
+            List<MongoMedia> medias = await _mediaStore
+                .Find(d => d.SourceId == sourceId)
+                .ToListAsync(cancellationToken);
+
+            return medias.Select(MediaMapper.Map).ToArray();
+        }
+
+        public async Task<KeyedSource[]> GetSourceSampleAsync(int size, CancellationToken cancellationToken)
+        {
+            List<MongoSource> sources = await _sourceStore
+                .AsQueryable()
+                .Where(s => !s.Deleted)
+                .Sample(size)
+                .ToListAsync(cancellationToken);
+
+            return sources.Select(SourceMapper.Map).ToArray();
         }
 
         public async Task AttachRedditToSource(Guid id, RedditSource redditSource, CancellationToken cancellationToken)
@@ -121,6 +142,20 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Repositories
         public async Task UpdateMediaAsync(KeyedMedia media, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
+        }
+
+        public async Task SetMediaApproval(Guid id, bool approved, CancellationToken cancellationToken)
+        {
+            UpdateDefinition<MongoMedia> updateDefinition = Builders<MongoMedia>.Update.Set(m => m.Approved, approved);
+
+            await _mediaStore.UpdateOneAsync(m => m.Id == id, updateDefinition, cancellationToken: cancellationToken);
+        }
+
+        public async Task SetMediaMature(Guid id, bool mature, CancellationToken cancellationToken)
+        {
+            UpdateDefinition<MongoMedia> updateDefinition = Builders<MongoMedia>.Update.Set(m => m.Mature, mature);
+
+            await _mediaStore.UpdateOneAsync(m => m.Id == id, updateDefinition, cancellationToken: cancellationToken);
         }
 
         public async Task<bool> MediaExistsAsync(Guid id, CancellationToken cancellationToken)
@@ -183,6 +218,13 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Repositories
                 throw new MediaFileNotFoundException(id);
 
             return MediaMapper.Map(mongoMedia);
+        }
+
+        public async Task SaveMediaHash(Guid id, byte[] hashBytes, CancellationToken cancellationToken)
+        {
+            UpdateDefinition<MongoMedia> updateDefinition = Builders<MongoMedia>.Update.Set(m => m.File!.Hash, hashBytes);
+
+            await _mediaStore.UpdateOneAsync(m => m.Id == id, updateDefinition, cancellationToken: cancellationToken);
         }
     }
 }

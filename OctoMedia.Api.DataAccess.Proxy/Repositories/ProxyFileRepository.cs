@@ -47,5 +47,10 @@ namespace OctoMedia.Api.DataAccess.Proxy.Repositories
         {
             throw new System.NotImplementedException();
         }
+
+        public async Task<bool> MediaExistsAsync(int id, string extension)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

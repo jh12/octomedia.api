@@ -1,11 +1,14 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
+using System.Security.Cryptography;
 using MimeTypes;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OctoMedia.Api.Common.Exceptions;
+using OctoMedia.Api.Common.Exceptions.File;
 using OctoMedia.Api.Common.Models;
 using OctoMedia.Api.Common.Repositories;
 using OctoMedia.Api.DTOs.V1.Media;
@@ -65,16 +68,64 @@ namespace OctoMedia.Api.Controllers
         {
             media.Deleted = false;
 
-            using(LogContext.PushProperty("MediaId", media.Key))
+            using (LogContext.PushProperty("MediaId", media.Key))
             {
                 throw new NotImplementedException();
+            }
+        }
+
+        [HttpPut("{id}/approve")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> ApproveMedia(Guid id, CancellationToken cancellationToken)
+        {
+            using (LogContext.PushProperty("MediaId", id))
+            {
+                await _mediaRepository.SetMediaApproval(id, true, cancellationToken);
+                return Ok();
+            }
+        }
+
+        [HttpPut("{id}/reject")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> RejectMedia(Guid id, CancellationToken cancellationToken)
+        {
+            using (LogContext.PushProperty("MediaId", id))
+            {
+                await _mediaRepository.SetMediaApproval(id, false, cancellationToken);
+                return Ok();
+            }
+        }
+
+        [HttpPut("{id}/mature")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> MatureMedia(Guid id, CancellationToken cancellationToken)
+        {
+            using (LogContext.PushProperty("MediaId", id))
+            {
+                await _mediaRepository.SetMediaMature(id, true, cancellationToken);
+                return Ok();
+            }
+        }
+
+        [HttpPut("{id}/unmature")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UnmatureMedia(Guid id, CancellationToken cancellationToken)
+        {
+            using (LogContext.PushProperty("MediaId", id))
+            {
+                await _mediaRepository.SetMediaMature(id, false, cancellationToken);
+                return Ok();
             }
         }
 
         [HttpGet("{id}/file")]
         public async Task<IActionResult> GetMediaFile(Guid id, CancellationToken cancellationToken)
         {
-            using(LogContext.PushProperty("MediaId", id))
+            using (LogContext.PushProperty("MediaId", id))
             {
                 if (!await _mediaRepository.MediaExistsAsync(id, cancellationToken))
                     return NotFound(new TextResponse("No file found with the requested id"));
@@ -91,7 +142,7 @@ namespace OctoMedia.Api.Controllers
         [HttpGet("{id}/file/small")]
         public async Task<IActionResult> GetMediaSmallFile(Guid id, CancellationToken cancellationToken)
         {
-            using(LogContext.PushProperty("MediaId", id))
+            using (LogContext.PushProperty("MediaId", id))
             {
                 if (!await _mediaRepository.MediaExistsAsync(id, cancellationToken))
                     return NotFound(new TextResponse("No file found with the requested id"));
@@ -129,7 +180,7 @@ namespace OctoMedia.Api.Controllers
         [RequestSizeLimit(UploadLimit)]
         public async Task<IActionResult> UploadMediaFile(Guid id, CancellationToken cancellationToken)
         {
-            using(LogContext.PushProperty("MediaId", id))
+            using (LogContext.PushProperty("MediaId", id))
             {
                 string contentType = Request.ContentType;
                 if (Request.ContentLength > UploadLimit)
@@ -143,7 +194,7 @@ namespace OctoMedia.Api.Controllers
                 }
                 catch (MimeTypeNotSupportedException e)
                 {
-                    using(LogContext.PushProperty("MagicBytes", "0x" + BitConverter.ToString(e.InputBytes).Replace("-", string.Empty)))
+                    using (LogContext.PushProperty("MagicBytes", "0x" + BitConverter.ToString(e.InputBytes).Replace("-", string.Empty)))
                     {
                         _logger.Error(e, "Could not recognize mimetype for media file");
                     }
@@ -161,7 +212,20 @@ namespace OctoMedia.Api.Controllers
                 if (!string.Equals(extension, metaExtension, StringComparison.CurrentCultureIgnoreCase))
                     return BadRequest(new TextResponse("Content-Type did not match the registered metadata"));
 
-                await _fileRepository.SaveMediaAsync(mediaFileId, extension, Request.Body, cancellationToken);
+                if (await _fileRepository.MediaExistsAsync(mediaFileId, extension))
+                    throw new MediaFileAlreadyExistsException(mediaFileId);
+
+                SHA256 hashAlgorithm = SHA256.Create();
+
+                await using (CryptoStream hashStream = new(Request.Body, hashAlgorithm, CryptoStreamMode.Read, false))
+                {
+                    await _fileRepository.SaveMediaAsync(mediaFileId, extension, hashStream, cancellationToken);
+
+                    if (!hashStream.HasFlushedFinalBlock)
+                        await hashStream.FlushFinalBlockAsync(cancellationToken);
+                }
+
+                await _mediaRepository.SaveMediaHash(id, hashAlgorithm.Hash!, cancellationToken);
 
                 return Ok();
             }
