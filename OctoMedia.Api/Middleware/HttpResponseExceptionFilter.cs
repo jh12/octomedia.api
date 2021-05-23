@@ -48,6 +48,16 @@ namespace OctoMedia.Api.Middleware
                 };
                 context.ExceptionHandled = true;
             }
+            else if (context.Exception is EntryBaseException<int> entryIntException)
+            {
+                FileResponse response = new FileResponse(entryIntException.Key, entryIntException.Value);
+
+                context.Result = new ObjectResult(response)
+                {
+                    StatusCode = (int?) entryIntException.Status
+                };
+                context.ExceptionHandled = true;
+            }
             else if (context.Exception is HttpResponseException httpResponse)
             {
                 _logger.Error(context.Exception, "An unhandled exception was thrown");
