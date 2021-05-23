@@ -28,10 +28,10 @@ jobs:
           RELEASE_VERSION="${SEMVER:1}"
           docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.CONTAINER_REGISTRY_PAT }}
           docker build --build-arg RELEASE_VERSION=$RELEASE_VERSION -f OctoMedia.Api/Dockerfile -t ghcr.io/jh12/octomedia.api/octomedia.api:latest-alpha -t ghcr.io/jh12/octomedia.api/octomedia.api:$RELEASE_VERSION .
-          docker push ghcr.io/jh12/octomedia.api/octomedia.api
+          docker push --all-tags ghcr.io/jh12/octomedia.api/octomedia.api
           docker logout ghcr.io
-          dotnet pack ./OctoMedia.Api.DTOs/OctoMedia.Api.DTOs.csproj --configuration Release --include-symbols -p:SymbolPackageFormat=snupkg -p:PackageVersion=$RELEASE_VERSION
-          dotnet nuget push **/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source ${{ secrets.NUGET_SOURCE }}
+          #dotnet pack ./OctoMedia.Api.DTOs/OctoMedia.Api.DTOs.csproj --configuration Release --include-symbols -p:SymbolPackageFormat=snupkg -p:PackageVersion=$RELEASE_VERSION
+          #dotnet nuget push **/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source ${{ secrets.NUGET_SOURCE }}
       # Master branch
       - name: Docker master publish
         if: github.event.base_ref == 'refs/heads/master'
@@ -40,7 +40,7 @@ jobs:
           RELEASE_VERSION="${SEMVER:1}"
           docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.CONTAINER_REGISTRY_PAT }}
           docker build --build-arg RELEASE_VERSION=$RELEASE_VERSION -f OctoMedia.Api/Dockerfile -t ghcr.io/jh12/octomedia.api/octomedia.api:latest -t ghcr.io/jh12/octomedia.api/octomedia.api:$RELEASE_VERSION .
-          docker push ghcr.io/jh12/octomedia.api/octomedia.api
+          docker push --all-tags ghcr.io/jh12/octomedia.api/octomedia.api
           docker logout ghcr.io
-          dotnet pack ./OctoMedia.Api.DTOs/OctoMedia.Api.DTOs.csproj --configuration Release --include-symbols -p:SymbolPackageFormat=snupkg -p:PackageVersion=$RELEASE_VERSION
-          dotnet nuget push **/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source ${{ secrets.NUGET_SOURCE }}
+          #dotnet pack ./OctoMedia.Api.DTOs/OctoMedia.Api.DTOs.csproj --configuration Release --include-symbols -p:SymbolPackageFormat=snupkg -p:PackageVersion=$RELEASE_VERSION
+          #dotnet nuget push **/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source ${{ secrets.NUGET_SOURCE }}
