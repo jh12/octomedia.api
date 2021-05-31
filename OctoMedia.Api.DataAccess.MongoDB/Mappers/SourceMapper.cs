@@ -10,7 +10,13 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Mappers
         public static KeyedSource Map(MongoSource source)
         {
             Author? author = source.Author != null ? new Author(source.Author.Username!) : null;
-            return new KeyedSource(source.Id, author, source.Title, source.SiteUri, source.RefererUri, source.Deleted);
+            return new KeyedSource(
+                source.Id, 
+                author, 
+                source.Title, 
+                source.SiteUri, 
+                source.RefererUri, 
+                source.Deleted);
         }
 
         public static MongoSource Map(KeyedSource source)
@@ -24,9 +30,12 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Mappers
 
         public static MongoSource Map(Source source)
         {
+            MongoSourceAuthor? author = source.Author != null ? new MongoSourceAuthor {Username = source.Author.Username} : null;
+
             return new MongoSource
             {
                 Title = source.Title,
+                Author = author,
                 SiteUri = source.SiteUri,
                 RefererUri = source.RefererUri,
                 Deleted = source.Deleted
