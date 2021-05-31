@@ -13,7 +13,6 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Models
         public Guid Id { get; set; }
         public string? Title { get; set; }
         public string? Description { get; set; }
-        public MongoMediaAuthor? Author { get; set; }
         public MongoMediaDimensions? Dimensions { get; set; }
         [BsonSerializer(typeof(GuidSerializer))]
         [BsonGuidRepresentation(GuidRepresentation.Standard)]
@@ -28,11 +27,6 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Models
 
         // Migration data
         public int MigratedId { get; set; }
-    }
-
-    internal class MongoMediaAuthor
-    {
-        public string? Username { get; set; }
     }
 
     internal class MongoMediaDimensions

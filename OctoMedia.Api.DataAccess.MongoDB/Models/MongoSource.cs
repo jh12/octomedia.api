@@ -5,10 +5,11 @@ using MongoDB.Bson.Serialization.IdGenerators;
 namespace OctoMedia.Api.DataAccess.MongoDB.Models
 {
     [BsonIgnoreExtraElements]
-    public class MongoSource
+    internal class MongoSource
     {
         [BsonId(IdGenerator = typeof(CombGuidGenerator))]
         public Guid Id { get; set; }
+        public MongoSourceAuthor? Author { get; set; }
 
         public string? Title { get; set; }
 
@@ -16,5 +17,10 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Models
         public Uri? RefererUri { get; set; }
 
         public bool Deleted { get; set; }
+    }
+
+    internal class MongoSourceAuthor
+    {
+        public string? Username { get; set; }
     }
 }

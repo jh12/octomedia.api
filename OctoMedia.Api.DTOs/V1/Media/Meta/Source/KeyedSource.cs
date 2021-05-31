@@ -11,12 +11,12 @@ namespace OctoMedia.Api.DTOs.V1.Media.Meta.Source
         {
         }
 
-        public KeyedSource(Guid key, string? title, Uri siteUri, Uri? refererUri, bool deleted) : base(title, siteUri, refererUri, deleted)
+        public KeyedSource(Guid key, Author? author, string? title, Uri siteUri, Uri? refererUri, bool deleted) : base(title, author, siteUri, refererUri, deleted)
         {
             Key = key;
         }
 
-        public KeyedSource(Guid key, string? title, string siteUri, string? refererUri, bool deleted) : base(title, siteUri, refererUri, deleted)
+        public KeyedSource(Guid key, string? author, string? title, string siteUri, string? refererUri, bool deleted) : base(title, author, siteUri, refererUri, deleted)
         {
             Key = key;
         }

@@ -1,5 +1,6 @@
 ﻿using OctoMedia.Api.DataAccess.MongoDB.Models;
 using OctoMedia.Api.DataAccess.MongoDB.Models.SourceAttachments;
+using OctoMedia.Api.DTOs.V1.Media.Meta;
 using OctoMedia.Api.DTOs.V1.Media.Meta.Source;
 
 namespace OctoMedia.Api.DataAccess.MongoDB.Mappers
@@ -8,7 +9,8 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Mappers
     {
         public static KeyedSource Map(MongoSource source)
         {
-            return new KeyedSource(source.Id, source.Title, source.SiteUri, source.RefererUri, source.Deleted);
+            Author? author = source.Author != null ? new Author(source.Author.Username!) : null;
+            return new KeyedSource(source.Id, author, source.Title, source.SiteUri, source.RefererUri, source.Deleted);
         }
 
         public static MongoSource Map(KeyedSource source)
