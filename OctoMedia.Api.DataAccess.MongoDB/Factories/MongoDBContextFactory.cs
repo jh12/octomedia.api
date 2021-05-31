@@ -80,7 +80,15 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Factories
                 // Counters int
                 {
                     if (!collectionNames.Contains(MongoDBCollectionNames.IntCounterCollection))
+                    {
                         mongoDatabase.CreateCollection(MongoDBCollectionNames.IntCounterCollection);
+                    }
+
+                    IMongoCollection<MongoIntCounter> counterCollection = mongoDatabase.GetCollection<MongoIntCounter>(MongoDBCollectionNames.IntCounterCollection);
+
+                    long documents = counterCollection.CountDocuments(f => true);
+                    if(documents == 0)
+                        counterCollection.InsertOne(new MongoIntCounter(){Key = "FileId", Value = 0});
                 }
 
                 _isInitialized = true;
