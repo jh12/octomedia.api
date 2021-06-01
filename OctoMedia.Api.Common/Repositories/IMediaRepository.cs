@@ -14,8 +14,8 @@ namespace OctoMedia.Api.Common.Repositories
         Task<Guid> CreateSourceAsync(Source source, CancellationToken cancellationToken);
         Task UpdateSourceAsync(KeyedSource source, CancellationToken cancellationToken);
 
-        Task<Guid[]> GetSourceMediaIdsAsync(Guid sourceId, CancellationToken cancellationToken);
-        Task<KeyedMedia[]> GetSourceMediasAsync(Guid sourceId, CancellationToken cancellationToken);
+        Task<Guid[]> GetSourceMediaIdsAsync(Guid sourceId, bool mustHaveFile, CancellationToken cancellationToken);
+        Task<KeyedMedia[]> GetSourceMediasAsync(Guid sourceId, bool mustHaveFile, CancellationToken cancellationToken);
 
         Task<KeyedSource[]> GetSourceSampleAsync(int size, CancellationToken cancellationToken);
 

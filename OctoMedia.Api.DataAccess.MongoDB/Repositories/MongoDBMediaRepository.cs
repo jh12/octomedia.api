@@ -66,20 +66,44 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Repositories
             throw new NotImplementedException();
         }
 
-        public async Task<Guid[]> GetSourceMediaIdsAsync(Guid sourceId, CancellationToken cancellationToken)
+        public async Task<Guid[]> GetSourceMediaIdsAsync(Guid sourceId, bool mustHaveFile, CancellationToken cancellationToken)
         {
-            List<Guid> mediaIds = await _mediaStore
-                .Find(d => d.SourceId == sourceId)
+            List<FilterDefinition<MongoMedia>> filters = new();
+
+            FilterDefinition<MongoMedia> sourceIdFilter = Builders<MongoMedia>.Filter.Where(d => d.SourceId == sourceId);
+            filters.Add(sourceIdFilter);
+
+            if (mustHaveFile)
+            {
+                FilterDefinition<MongoMedia> mustHaveFileFilter = Builders<MongoMedia>.Filter.Where(d => d.File!.Hash != null);
+                filters.Add(mustHaveFileFilter);
+            }
+
+            FilterDefinition<MongoMedia> definition = Builders<MongoMedia>.Filter.And(filters);
+
+            List<Guid> mediaIds = await _mediaStore.Find(definition)
                 .Project(d => d.Id)
                 .ToListAsync(cancellationToken);
 
             return mediaIds.ToArray();
         }
 
-        public async Task<KeyedMedia[]> GetSourceMediasAsync(Guid sourceId, CancellationToken cancellationToken)
+        public async Task<KeyedMedia[]> GetSourceMediasAsync(Guid sourceId, bool mustHaveFile, CancellationToken cancellationToken)
         {
-            List<MongoMedia> medias = await _mediaStore
-                .Find(d => d.SourceId == sourceId)
+            List<FilterDefinition<MongoMedia>> filters = new();
+
+            FilterDefinition<MongoMedia> sourceIdFilter = Builders<MongoMedia>.Filter.Where(d => d.SourceId == sourceId);
+            filters.Add(sourceIdFilter);
+
+            if (mustHaveFile)
+            {
+                FilterDefinition<MongoMedia> mustHaveFileFilter = Builders<MongoMedia>.Filter.Where(d => d.File!.Hash != null);
+                filters.Add(mustHaveFileFilter);
+            }
+
+            FilterDefinition<MongoMedia> definition = Builders<MongoMedia>.Filter.And(filters);
+
+            List<MongoMedia> medias = await _mediaStore.Find(definition)
                 .ToListAsync(cancellationToken);
 
             return medias.Select(MediaMapper.Map).ToArray();

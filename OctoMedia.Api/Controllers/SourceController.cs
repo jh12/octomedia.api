@@ -60,22 +60,22 @@ namespace OctoMedia.Api.Controllers
         }
 
         [HttpGet("{id}/medias/ids")]
-        public async Task<Guid[]> GetSourceMediaIds(Guid id, CancellationToken cancellationToken)
+        public async Task<Guid[]> GetSourceMediaIds(Guid id, bool mustHaveFile, CancellationToken cancellationToken)
         {
             using (LogContext.PushProperty("SourceId", id))
             {
-                Guid[] mediaIds = await _mediaRepository.GetSourceMediaIdsAsync(id, cancellationToken);
+                Guid[] mediaIds = await _mediaRepository.GetSourceMediaIdsAsync(id, mustHaveFile, cancellationToken);
 
                 return mediaIds;
             }
         }
 
         [HttpGet("{id}/medias")]
-        public async Task<KeyedMedia[]> GetSourceMedia(Guid id, CancellationToken cancellationToken)
+        public async Task<KeyedMedia[]> GetSourceMedia(Guid id, bool mustHaveFile, CancellationToken cancellationToken)
         {
             using (LogContext.PushProperty("SourceId", id))
             {
-                KeyedMedia[] medias = await _mediaRepository.GetSourceMediasAsync(id, cancellationToken);
+                KeyedMedia[] medias = await _mediaRepository.GetSourceMediasAsync(id, mustHaveFile, cancellationToken);
 
                 return medias;
             }
