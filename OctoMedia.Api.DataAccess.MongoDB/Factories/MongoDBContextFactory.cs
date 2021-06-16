@@ -91,6 +91,24 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Factories
                         counterCollection.InsertOne(new MongoIntCounter(){Key = "FileId", Value = 0});
                 }
 
+                // Recent collections
+                {
+                    if (!collectionNames.Contains(MongoDBCollectionNames.RecentSourceCollection))
+                    {
+                        mongoDatabase.CreateCollection(MongoDBCollectionNames.RecentSourceCollection, new CreateCollectionOptions(){Capped = true, MaxDocuments = 1000, MaxSize = 1000 * 48});
+                    }
+
+                    if (!collectionNames.Contains(MongoDBCollectionNames.RecentMediaCollection))
+                    {
+                        mongoDatabase.CreateCollection(MongoDBCollectionNames.RecentMediaCollection, new CreateCollectionOptions(){Capped = true, MaxDocuments = 1000, MaxSize = 1000 * 48});
+                    }
+
+                    if (!collectionNames.Contains(MongoDBCollectionNames.RecentMediaWithFileCollection))
+                    {
+                        mongoDatabase.CreateCollection(MongoDBCollectionNames.RecentMediaWithFileCollection, new CreateCollectionOptions(){Capped = true, MaxDocuments = 1000, MaxSize = 1000 * 48});
+                    }
+                }
+
                 _isInitialized = true;
             }
         }

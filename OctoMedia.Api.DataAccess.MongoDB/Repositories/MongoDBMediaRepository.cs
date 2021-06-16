@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using MongoDB.Driver.Linq;
 using OctoMedia.Api.Common.Exceptions.Entry;
@@ -20,17 +21,24 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Repositories
     public class MongoDBMediaRepository : IMediaRepository
     {
         private readonly MongoDBContextFactory _contextFactory;
-        private IMongoCollection<MongoMedia> _mediaStore;
-        private IMongoCollection<MongoSource> _sourceStore;
-        private IMongoCollection<MongoIntCounter> _intCounterStore;
+        private readonly IMongoCollection<MongoMedia> _mediaStore;
+        private readonly IMongoCollection<MongoSource> _sourceStore;
+        private readonly IMongoCollection<MongoIntCounter> _intCounterStore;
+        private readonly IMongoCollection<MongoRecentGuid> _recentSourceStore;
+        private readonly IMongoCollection<MongoRecentGuid> _recentMediaStore;
+        private readonly IMongoCollection<MongoRecentGuid> _recentMediaWithFileStore;
 
         public MongoDBMediaRepository(MongoDBContextFactory contextFactory)
         {
             _contextFactory = contextFactory;
-            
+
             _mediaStore = _contextFactory.GetContext<MongoMedia>(MongoDBCollectionNames.MediaCollection);
             _sourceStore = _contextFactory.GetContext<MongoSource>(MongoDBCollectionNames.SourceCollection);
             _intCounterStore = _contextFactory.GetContext<MongoIntCounter>(MongoDBCollectionNames.IntCounterCollection);
+
+            _recentSourceStore = _contextFactory.GetContext<MongoRecentGuid>(MongoDBCollectionNames.RecentSourceCollection);
+            _recentMediaStore = _contextFactory.GetContext<MongoRecentGuid>(MongoDBCollectionNames.RecentMediaCollection);
+            _recentMediaWithFileStore = _contextFactory.GetContext<MongoRecentGuid>(MongoDBCollectionNames.RecentMediaWithFileCollection);
         }
 
         public async Task<KeyedSource> GetSourceAsync(Guid id, CancellationToken cancellationToken)
@@ -57,6 +65,7 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Repositories
             MongoSource mongoSource = SourceMapper.Map(source);
 
             await _sourceStore.InsertOneAsync(mongoSource, null, cancellationToken);
+            await _recentSourceStore.InsertOneAsync(new MongoRecentGuid() { Guid = mongoSource.Id });
 
             return mongoSource.Id;
         }
@@ -125,7 +134,7 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Repositories
             MongoRedditAttachment mongoAttachment = SourceMapper.Map(redditSource);
 
             UpdateDefinition<MongoSource> updateDefinition = Builders<MongoSource>.Update.Set("Attachment", mongoAttachment);
-            UpdateOptions updateOptions = new UpdateOptions(){IsUpsert = false};
+            UpdateOptions updateOptions = new UpdateOptions() { IsUpsert = false };
 
             UpdateResult updateOneAsync = await _sourceStore
                 .UpdateOneAsync(d => d.Id == id && !d.Deleted, updateDefinition, updateOptions, cancellationToken);
@@ -159,6 +168,7 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Repositories
             mongoMedia.CreatedAt = DateTime.UtcNow;
 
             await _mediaStore.InsertOneAsync(mongoMedia, null, cancellationToken);
+            await _recentMediaStore.InsertOneAsync(new MongoRecentGuid() { Guid = mongoMedia.Id });
 
             return mongoMedia.Id;
         }
@@ -200,13 +210,13 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Repositories
         public async Task<int> GetNextAvailableFileId()
         {
             UpdateDefinition<MongoIntCounter> updateDefinition = Builders<MongoIntCounter>.Update.Inc(c => c.Value, 1);
-            var updateOptions = new FindOneAndUpdateOptions<MongoIntCounter, MongoIntCounter>{ReturnDocument = ReturnDocument.Before};
+            var updateOptions = new FindOneAndUpdateOptions<MongoIntCounter, MongoIntCounter> { ReturnDocument = ReturnDocument.Before };
 
             MongoIntCounter? intCounter = await _intCounterStore.FindOneAndUpdateAsync<MongoIntCounter>(c => c.Key == "FileId", updateDefinition, updateOptions);
 
             if (intCounter == null)
             {
-                await _intCounterStore.InsertOneAsync(new MongoIntCounter {Key = "FileId", Value = 2});
+                await _intCounterStore.InsertOneAsync(new MongoIntCounter { Key = "FileId", Value = 2 });
                 return 1;
             }
 
@@ -224,7 +234,7 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Repositories
                 return mediaFile.Id;
 
             int availableFileId = await GetNextAvailableFileId();
-            UpdateDefinition<MongoMedia> updateDefinition = Builders<MongoMedia>.Update.Set(m => m.File, new MongoMediaFile {Id = availableFileId});
+            UpdateDefinition<MongoMedia> updateDefinition = Builders<MongoMedia>.Update.Set(m => m.File, new MongoMediaFile { Id = availableFileId });
 
             await _mediaStore
                 .UpdateOneAsync(d => d.Id == id && !d.Deleted, updateDefinition, cancellationToken: cancellationToken);
@@ -249,6 +259,28 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Repositories
             UpdateDefinition<MongoMedia> updateDefinition = Builders<MongoMedia>.Update.Set(m => m.File!.Hash, hashBytes);
 
             await _mediaStore.UpdateOneAsync(m => m.Id == id, updateDefinition, cancellationToken: cancellationToken);
+
+            await _recentMediaWithFileStore.InsertOneAsync(new MongoRecentGuid() { Guid = id });
+        }
+
+        public async Task<KeyedMedia[]> GetRecentMediaWithFilesAsync(int count, CancellationToken cancellationToken)
+        {
+            List<Guid> recentGuids = await _recentMediaWithFileStore
+                .Find(m => true)
+                .Limit(count)
+                .Project(m => m.Guid)
+                .ToListAsync(cancellationToken);
+
+            FilterDefinition<MongoMedia> filter = Builders<MongoMedia>.Filter.And(
+                Builders<MongoMedia>.Filter.Where(m => m.Deleted == false),
+                Builders<MongoMedia>.Filter.In(m => m.Id, recentGuids)
+                );
+
+            List<MongoMedia> recentMedias = await _mediaStore
+                .Find(filter)
+                .ToListAsync(cancellationToken);
+
+            return recentMedias.Select(MediaMapper.Map).ToArray();
         }
     }
 }
