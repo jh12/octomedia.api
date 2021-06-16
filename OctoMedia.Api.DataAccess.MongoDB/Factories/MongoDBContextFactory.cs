@@ -95,17 +95,17 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Factories
                 {
                     if (!collectionNames.Contains(MongoDBCollectionNames.RecentSourceCollection))
                     {
-                        mongoDatabase.CreateCollection(MongoDBCollectionNames.RecentSourceCollection, new CreateCollectionOptions(){Capped = true, MaxDocuments = 1000, MaxSize = 1000 * 48});
+                        mongoDatabase.CreateCollection(MongoDBCollectionNames.RecentSourceCollection, new CreateCollectionOptions(){Capped = true, MaxSize = 10_000 * 48});
                     }
 
                     if (!collectionNames.Contains(MongoDBCollectionNames.RecentMediaCollection))
                     {
-                        mongoDatabase.CreateCollection(MongoDBCollectionNames.RecentMediaCollection, new CreateCollectionOptions(){Capped = true, MaxDocuments = 1000, MaxSize = 1000 * 48});
+                        mongoDatabase.CreateCollection(MongoDBCollectionNames.RecentMediaCollection, new CreateCollectionOptions(){Capped = true, MaxSize = 10_000 * 48});
                     }
 
                     if (!collectionNames.Contains(MongoDBCollectionNames.RecentMediaWithFileCollection))
                     {
-                        mongoDatabase.CreateCollection(MongoDBCollectionNames.RecentMediaWithFileCollection, new CreateCollectionOptions(){Capped = true, MaxDocuments = 1000, MaxSize = 1000 * 48});
+                        mongoDatabase.CreateCollection(MongoDBCollectionNames.RecentMediaWithFileCollection, new CreateCollectionOptions(){Capped = true, MaxSize = 10_000 * 48});
                     }
                 }
 
