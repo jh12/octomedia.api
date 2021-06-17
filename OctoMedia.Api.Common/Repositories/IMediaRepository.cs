@@ -44,7 +44,7 @@ namespace OctoMedia.Api.Common.Repositories
 
         Task SaveMediaHash(Guid id, byte[] hashBytes, CancellationToken cancellationToken);
 
-        Task<KeyedMedia[]> GetRecentMediaWithFilesAsync(int count, CancellationToken cancellationToken);
+        Task<KeyedMedia[]> GetRecentMediaWithFilesAsync(int count, DateTime? after, CancellationToken cancellationToken);
 
         #endregion
     }
