@@ -65,7 +65,7 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Repositories
             MongoSource mongoSource = SourceMapper.Map(source);
 
             await _sourceStore.InsertOneAsync(mongoSource, null, cancellationToken);
-            await _recentSourceStore.InsertOneAsync(new MongoRecentGuid() { Guid = mongoSource.Id });
+            await _recentSourceStore.InsertOneAsync(new MongoRecentGuid() { Guid = mongoSource.Id, Timestamp = DateTime.UtcNow});
 
             return mongoSource.Id;
         }
@@ -168,7 +168,7 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Repositories
             mongoMedia.CreatedAt = DateTime.UtcNow;
 
             await _mediaStore.InsertOneAsync(mongoMedia, null, cancellationToken);
-            await _recentMediaStore.InsertOneAsync(new MongoRecentGuid() { Guid = mongoMedia.Id });
+            await _recentMediaStore.InsertOneAsync(new MongoRecentGuid() { Guid = mongoMedia.Id, Timestamp = DateTime.UtcNow });
 
             return mongoMedia.Id;
         }
@@ -260,21 +260,20 @@ namespace OctoMedia.Api.DataAccess.MongoDB.Repositories
 
             await _mediaStore.UpdateOneAsync(m => m.Id == id, updateDefinition, cancellationToken: cancellationToken);
 
-            await _recentMediaWithFileStore.InsertOneAsync(new MongoRecentGuid() { Guid = id });
+            await _recentMediaWithFileStore.InsertOneAsync(new MongoRecentGuid() { Guid = id, Timestamp = DateTime.UtcNow });
         }
 
-        public async Task<KeyedMedia[]> GetRecentMediaWithFilesAsync(int count, CancellationToken cancellationToken)
+        public async Task<KeyedMedia[]> GetRecentMediaWithFilesAsync(int count, DateTime? after, CancellationToken cancellationToken)
         {
             List<Guid> recentGuids = await _recentMediaWithFileStore
-                .Find(m => true)
+                .Find(m => m.Timestamp > after)
                 .Limit(count)
                 .Project(m => m.Guid)
                 .ToListAsync(cancellationToken);
 
             FilterDefinition<MongoMedia> filter = Builders<MongoMedia>.Filter.And(
                 Builders<MongoMedia>.Filter.Where(m => m.Deleted == false),
-                Builders<MongoMedia>.Filter.In(m => m.Id, recentGuids)
-                );
+                Builders<MongoMedia>.Filter.In(m => m.Id, recentGuids));
 
             List<MongoMedia> recentMedias = await _mediaStore
                 .Find(filter)

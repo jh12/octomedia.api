@@ -238,9 +238,9 @@ namespace OctoMedia.Api.Controllers
         }
 
         [HttpGet("recent")]
-        public async Task<KeyedMedia[]> GetRecentMediasWithFile(int count = 25, CancellationToken cancellationToken = default)
+        public async Task<KeyedMedia[]> GetRecentMediasWithFile(int count = 25, DateTime? after = null, CancellationToken cancellationToken = default)
         {
-            return await _mediaRepository.GetRecentMediaWithFilesAsync(count, cancellationToken);
+            return await _mediaRepository.GetRecentMediaWithFilesAsync(count, after, cancellationToken);
         }
     }
 }
